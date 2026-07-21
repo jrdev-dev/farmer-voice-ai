@@ -45,7 +45,15 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     # Local Apps
-    'apps.accounts',
+'apps.accounts',
+'apps.knowledge_base',
+'apps.chatbot',
+'apps.speech',
+'apps.ocr',
+'apps.feedback',
+'apps.notifications',
+'apps.analytics',
+'apps.common',
 ]
 
 MIDDLEWARE = [
@@ -132,7 +140,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "accounts.User"
 from datetime import timedelta
 
-AUTH_USER_MODEL = "accounts.User"
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (

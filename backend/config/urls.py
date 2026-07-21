@@ -13,6 +13,9 @@ urlpatterns = [
     # Accounts APIs
     path("api/accounts/", include("apps.accounts.urls")),
 
+    # Knowledge Base APIs
+    path("api/knowledge/", include("apps.knowledge_base.urls")),
+
     # API Schema
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
 
