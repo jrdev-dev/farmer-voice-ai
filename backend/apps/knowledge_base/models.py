@@ -2,61 +2,102 @@ from django.db import models
 
 
 class KnowledgeSource(models.Model):
-    SOURCE_TYPES = [
-        ("excel", "Excel"),
-        ("csv", "CSV"),
-        ("pdf", "PDF"),
-        ("docx", "DOCX"),
-        ("website", "Website"),
-        ("api", "API"),
-        ("image", "Image"),
-    ]
 
-    STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("processing", "Processing"),
-        ("completed", "Completed"),
-        ("failed", "Failed"),
-    ]
+    class SourceType(models.TextChoices):
+        EXCEL = "excel", "Excel"
+        CSV = "csv", "CSV"
+        PDF = "pdf", "PDF"
+        DOCX = "docx", "DOCX"
+        WEBSITE = "website", "Website"
+        API = "api", "API"
+        IMAGE = "image", "Image"
 
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        PROCESSING = "processing", "Processing"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+
+    title = models.CharField(
+        max_length=255
+    )
+
+    description = models.TextField(
+        blank=True
+    )
 
     source_type = models.CharField(
         max_length=20,
-        choices=SOURCE_TYPES
+        choices=SourceType.choices,
     )
 
     source_name = models.CharField(
         max_length=255,
-        blank=True
+        blank=True,
     )
 
     file = models.FileField(
         upload_to="knowledge_sources/",
         blank=True,
-        null=True
+        null=True,
     )
 
     language = models.CharField(
         max_length=20,
-        default="en"
+        default="en",
     )
 
     version = models.CharField(
         max_length=20,
-        default="1.0"
+        default="1.0",
     )
 
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default="pending"
+        choices=Status.choices,
+        default=Status.PENDING,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    # ---------------------------------------------------------
+    # Import Statistics
+    # ---------------------------------------------------------
 
-    updated_at = models.DateTimeField(auto_now=True)
+    total_records = models.PositiveIntegerField(
+        default=0,
+    )
+
+    processed_records = models.PositiveIntegerField(
+        default=0,
+    )
+
+    failed_records = models.PositiveIntegerField(
+        default=0,
+    )
+
+    # ---------------------------------------------------------
+    # Processing Information
+    # ---------------------------------------------------------
+
+    error_message = models.TextField(
+        blank=True,
+    )
+
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+    )
+
+    # ---------------------------------------------------------
+    # Audit Fields
+    # ---------------------------------------------------------
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
 
     def __str__(self):
         return self.title
@@ -64,73 +105,112 @@ class KnowledgeSource(models.Model):
 
 class Knowledge(models.Model):
 
-    CATEGORY_CHOICES = [
-        ("Disease", "Disease"),
-        ("Pest", "Pest"),
-        ("Fertilizer", "Fertilizer"),
-        ("Seed", "Seed"),
-        ("Soil", "Soil"),
-        ("Weather", "Weather"),
-        ("Market", "Market"),
-        ("Scheme", "Government Scheme"),
-        ("Irrigation", "Irrigation"),
-        ("Harvest", "Harvest"),
-        ("Storage", "Storage"),
-        ("General", "General"),
-    ]
+    class Category(models.TextChoices):
+        DISEASE = "Disease", "Disease"
+        PEST = "Pest", "Pest"
+        FERTILIZER = "Fertilizer", "Fertilizer"
+        SEED = "Seed", "Seed"
+        SOIL = "Soil", "Soil"
+        WEATHER = "Weather", "Weather"
+        MARKET = "Market", "Market"
+        SCHEME = "Scheme", "Government Scheme"
+        IRRIGATION = "Irrigation", "Irrigation"
+        HARVEST = "Harvest", "Harvest"
+        STORAGE = "Storage", "Storage"
+        GENERAL = "General", "General"
 
     knowledge_source = models.ForeignKey(
         KnowledgeSource,
         on_delete=models.CASCADE,
-        related_name="knowledge_items"
+        related_name="knowledge_items",
     )
 
-    crop = models.CharField(max_length=100)
+    # =========================================================
+    # Agriculture Information
+    # =========================================================
+
+    crop = models.CharField(
+        max_length=100,
+        blank=True,
+    )
 
     category = models.CharField(
         max_length=30,
-        choices=CATEGORY_CHOICES,
-        default="General"
+        choices=Category.choices,
+        default=Category.GENERAL,
     )
 
     subcategory = models.CharField(
         max_length=100,
-        blank=True
+        blank=True,
+    )
+
+    domain = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Disease, Pest, Fertilizer, Irrigation, Weather, etc.",
     )
 
     stage = models.CharField(
         max_length=100,
-        blank=True
+        blank=True,
     )
+
+    # =========================================================
+    # Question & Answer
+    # =========================================================
 
     question = models.TextField()
 
+    normalized_question = models.TextField(
+        blank=True,
+        help_text="Normalized question used for multilingual search.",
+    )
+
     answer = models.TextField()
 
+    search_text = models.TextField(
+        blank=True,
+        help_text="Combined searchable text used for embeddings and semantic search.",
+    )
+
+    # =========================================================
+    # Metadata
+    # =========================================================
+
     keywords = models.TextField(
-        blank=True
+        blank=True,
+    )
+
+    prepared_by = models.CharField(
+        max_length=255,
+        blank=True,
     )
 
     language = models.CharField(
         max_length=20,
-        default="en"
+        default="en",
     )
 
     priority = models.PositiveIntegerField(
-        default=1
+        default=1,
     )
 
     is_active = models.BooleanField(
-        default=True
+        default=True,
     )
 
+    # =========================================================
+    # Audit Fields
+    # =========================================================
+
     created_at = models.DateTimeField(
-        auto_now_add=True
+        auto_now_add=True,
     )
 
     updated_at = models.DateTimeField(
-        auto_now=True
+        auto_now=True,
     )
 
     def __str__(self):
-        return f"{self.crop} - {self.question[:50]}"
+        return f"{self.crop or 'General'} - {self.question[:60]}"

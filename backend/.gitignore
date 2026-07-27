@@ -1,28 +1,52 @@
-# Virtual Environment
-venv/
-.venv/
-
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *.pyo
 
-# Django
+# Virtual environments
+.venv/
+venv/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Django runtime
 db.sqlite3
 media/
-staticfiles/
+*.log
 
 # IDE
 .vscode/
 .idea/
 
-# Environment
-.env
+# Test/cache
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Logs
-logs/
-*.log
+# Generated audio
+*.mp3
+*.wav
+*.webm
+*.m4a
+*.ogg
 
-# OS
-Thumbs.db
-.DS_Store
+# Debug / temporary artifacts
+scratch/
+*_debug.txt
+final_performance_fix.txt
+final_speed_accuracy_fix.txt
+intent_ranking_fix.txt
+next_fix.txt
+performance_debug.txt
+step4_voice_fix.txt
+ui_debug.txt
+universal_voice_pipeline.txt
+
+# Local archives
+*.zip
+
+# Generated vector index
+vector_db/

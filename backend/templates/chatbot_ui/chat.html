@@ -1,0 +1,567 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description" content="Farmer Voice AI - Multilingual agricultural assistant">
+
+    <title>
+        Farmer Voice AI
+    </title>
+
+    <link rel="stylesheet" href="{% static 'chatbot_ui/css/style.css' %}">
+</head>
+
+
+<body>
+
+    <div class="app-shell">
+
+
+        <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+        <aside class="sidebar" id="sidebar">
+
+            <div class="sidebar-header">
+
+                <div class="brand-icon">
+                    🌾
+                </div>
+
+                <div>
+                    <h1 class="brand-title">
+                        Farmer Voice AI
+                    </h1>
+
+                    <p class="brand-subtitle">
+                        Smart Agriculture Assistant
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             NEW CHAT
+        ================================================== -->
+
+            <button type="button" class="new-chat-button" id="newChatButton">
+                <span>＋</span>
+                New Chat
+            </button>
+
+
+            <!-- =================================================
+             LANGUAGE
+        ================================================== -->
+
+            <div class="sidebar-section">
+
+                <label class="sidebar-label" for="languageSelect">
+                    Language
+                </label>
+
+                <select id="languageSelect" class="language-select">
+                    <option value="">
+                        Auto Detect
+                    </option>
+
+                    <option value="hi">
+                        हिन्दी
+                    </option>
+
+                    <option value="en">
+                        English
+                    </option>
+
+                    <option value="hinglish">
+                        Hinglish
+                    </option>
+
+                    <option value="gu">
+                        ગુજરાતી
+                    </option>
+
+                    <option value="mr">
+                        मराठी
+                    </option>
+
+                    <option value="pa">
+                        ਪੰਜਾਬੀ
+                    </option>
+
+                    <option value="ta">
+                        தமிழ்
+                    </option>
+
+                    <option value="te">
+                        తెలుగు
+                    </option>
+                </select>
+
+            </div>
+
+
+            <!-- =================================================
+             CAPABILITIES
+        ================================================== -->
+
+            <div class="sidebar-section">
+
+                <div class="sidebar-label">
+                    Capabilities
+                </div>
+
+                <div class="capability-list">
+
+                    <div class="capability-item">
+                        💬 Multilingual Chat
+                    </div>
+
+                    <div class="capability-item">
+                        🎤 Voice Questions
+                    </div>
+
+                    <div class="capability-item">
+                        🔊 Voice Answers
+                    </div>
+
+                    <div class="capability-item">
+                        📷 Image OCR
+                    </div>
+
+                    <div class="capability-item">
+                        📚 Trusted Sources
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             USER
+        ================================================== -->
+
+            <div class="sidebar-user">
+
+                <div class="user-avatar">
+                    👨‍🌾
+                </div>
+
+                <div class="user-information">
+
+                    <div class="user-name" id="userName">
+                        Farmer
+                    </div>
+
+                    <div class="user-email" id="userEmail">
+                    </div>
+
+                </div>
+
+
+                <button type="button" class="logout-button" id="logoutButton" title="Logout">
+                    ↪
+                </button>
+
+            </div>
+
+        </aside>
+
+
+        <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+        <main class="main-area">
+
+
+            <!-- =================================================
+             TOP BAR
+        ================================================== -->
+
+            <header class="top-bar">
+
+                <div class="top-bar-left">
+
+                    <button type="button" class="mobile-menu-button" id="mobileMenuButton" aria-label="Open menu">
+                        ☰
+                    </button>
+
+                    <div>
+
+                        <h2>
+                            Agricultural Assistant
+                        </h2>
+
+                        <p>
+                            Ask your farming question by text,
+                            voice or image
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 NOTIFICATIONS
+            ============================================== -->
+
+                <div class="notification-wrapper">
+
+                    <button type="button" id="notificationButton" class="notification-button" title="Notifications"
+                        aria-label="Notifications">
+                        🔔
+
+                        <span id="notificationBadge" class="notification-badge" hidden>
+                        </span>
+
+                    </button>
+
+
+                    <div id="notificationPanel" class="notification-panel" hidden>
+
+                        <div class="notification-panel-header">
+
+                            <strong>
+                                Notifications
+                            </strong>
+
+                            <button type="button" id="markAllReadButton" class="mark-all-read-button">
+                                Mark all read
+                            </button>
+
+                        </div>
+
+
+                        <div id="notificationList" class="notification-list">
+
+                            <div class="notification-empty">
+                                No notifications yet.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <!-- =================================================
+             SYSTEM MESSAGE
+        ================================================== -->
+
+            <div id="chatSystemMessage" class="chat-system-message" hidden>
+            </div>
+
+
+            <!-- =================================================
+             CHAT AREA
+        ================================================== -->
+
+            <section class="messages-container" id="messagesContainer">
+
+
+                <!-- =============================================
+                 WELCOME
+            ============================================== -->
+
+                <div class="welcome-panel" id="welcomePanel">
+
+                    <div class="welcome-icon">
+                        🌱
+                    </div>
+
+                    <h2>
+                        Namaste! 👋
+                    </h2>
+
+                    <p>
+                        Main aapka AI farming assistant hoon.
+                        Aap kheti se related sawal text,
+                        voice ya image ke through pooch sakte hain.
+                    </p>
+
+
+                    <!-- =========================================
+                     SUGGESTIONS
+                ========================================== -->
+
+                    <div class="suggestion-grid">
+
+                        <button type="button" class="suggestion-card"
+                            data-question="सोयाबीन में कौन सी खाद डालनी चाहिए?">
+                            <span class="suggestion-icon">
+                                🌱
+                            </span>
+
+                            <span>
+                                सोयाबीन में कौन सी खाद डालनी चाहिए?
+                            </span>
+                        </button>
+
+
+                        <button type="button" class="suggestion-card"
+                            data-question="गेहूं की फसल में सिंचाई कब करनी चाहिए?">
+                            <span class="suggestion-icon">
+                                💧
+                            </span>
+
+                            <span>
+                                गेहूं में सिंचाई कब करें?
+                            </span>
+                        </button>
+
+
+                        <button type="button" class="suggestion-card"
+                            data-question="फसल में पीले पत्ते होने का क्या कारण है?">
+                            <span class="suggestion-icon">
+                                🍃
+                            </span>
+
+                            <span>
+                                पत्ते पीले क्यों हो रहे हैं?
+                            </span>
+                        </button>
+
+
+                        <button type="button" class="suggestion-card"
+                            data-question="कपास की फसल में कीट नियंत्रण कैसे करें?">
+                            <span class="suggestion-icon">
+                                🐛
+                            </span>
+
+                            <span>
+                                कपास में कीट नियंत्रण
+                            </span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =============================================
+                 MESSAGE LIST
+            ============================================== -->
+
+                <div class="messages-list" id="messagesList">
+                </div>
+
+
+                <!-- =============================================
+                 TYPING INDICATOR
+            ============================================== -->
+
+                <div class="typing-indicator" id="typingIndicator" hidden>
+
+                    <div class="assistant-avatar">
+                        🌾
+                    </div>
+
+                    <div class="typing-bubble">
+
+                        <span></span>
+                        <span></span>
+                        <span></span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+             OCR IMAGE PREVIEW
+        ================================================== -->
+
+            <section id="imagePreviewPanel" class="image-preview-panel" hidden>
+
+                <div class="image-preview-header">
+
+                    <div>
+
+                        <strong>
+                            📷 Selected Image
+                        </strong>
+
+                        <div id="imageFileName" class="image-file-name">
+                        </div>
+
+                    </div>
+
+
+                    <button type="button" id="removeImageButton" class="remove-image-button" title="Remove image">
+                        ✕
+                    </button>
+
+                </div>
+
+
+                <div class="image-preview-body">
+
+                    <img id="imagePreview" class="image-preview" alt="Selected image preview">
+
+                    <button type="button" id="extractTextButton" class="extract-text-button">
+                        Extract Text
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+             OCR RESULT
+        ================================================== -->
+
+            <section id="ocrResultPanel" class="ocr-result-panel" hidden>
+
+                <div class="ocr-result-header">
+
+                    <strong>
+                        Extracted Text
+                    </strong>
+
+                    <span id="ocrConfidence" class="ocr-confidence">
+                    </span>
+
+                </div>
+
+
+                <div id="ocrResultText" class="ocr-result-text">
+                </div>
+
+
+                <button type="button" id="useOCRTextButton" class="use-ocr-text-button">
+                    Use in Chat
+                </button>
+
+            </section>
+
+
+            <!-- =================================================
+             RECORDING STATUS
+        ================================================== -->
+
+            <section id="recordingPanel" class="recording-panel" hidden>
+
+                <div class="recording-dot">
+                </div>
+
+                <span>
+                    Listening...
+                </span>
+
+                <strong id="recordingTimer">
+                    00:00
+                </strong>
+
+                <span class="recording-help">
+                    Tap stop when you finish speaking
+                </span>
+
+            </section>
+
+
+            <!-- =================================================
+             CHAT INPUT
+        ================================================== -->
+
+            <footer class="chat-input-area">
+
+                <div class="input-wrapper">
+
+
+                    <!-- =========================================
+                     IMAGE BUTTON
+                ========================================== -->
+
+                    <button type="button" id="imageUploadButton" class="input-action-button" title="Upload image"
+                        aria-label="Upload image">
+                        📷
+                    </button>
+
+
+                    <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp" hidden>
+
+
+                    <!-- =========================================
+                     TEXT INPUT
+                ========================================== -->
+
+                    <textarea id="messageInput" class="message-input" rows="1" maxlength="4000"
+                        placeholder="Ask your farming question..." aria-label="Farming question"></textarea>
+
+
+                    <!-- =========================================
+                     VOICE BUTTON
+                ========================================== -->
+
+                    <button type="button" id="voiceButton" class="input-action-button voice-button"
+                        title="Ask using voice" aria-label="Ask using voice">
+                        🎤
+                    </button>
+
+
+                    <!-- =========================================
+                     SEND
+                ========================================== -->
+
+                    <button type="button" id="sendButton" class="send-button" title="Send" aria-label="Send message">
+                        ➤
+                    </button>
+
+                </div>
+
+
+                <div class="input-footer">
+
+                    <span>
+                        🌾 Farmer Voice AI
+                    </span>
+
+                    <span>
+                        AI answers are based on available
+                        agricultural knowledge sources.
+                    </span>
+
+                </div>
+
+            </footer>
+
+
+            <!-- =================================================
+             HIDDEN AUDIO PLAYER
+        ================================================== -->
+
+            <audio id="responseAudioPlayer" preload="none" hidden>
+            </audio>
+
+        </main>
+
+    </div>
+
+
+    <!-- =========================================================
+     CHAT JAVASCRIPT
+========================================================== -->
+
+    <script src="{% static 'chatbot_ui/js/chat.js' %}"></script>
+
+
+</body>
+
+</html>

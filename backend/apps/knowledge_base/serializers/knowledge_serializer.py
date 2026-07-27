@@ -6,24 +6,13 @@ from apps.knowledge_base.models import (
 )
 
 
+class KnowledgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Knowledge
+        fields = "__all__"
+
+
 class KnowledgeSourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = KnowledgeSource
         fields = "__all__"
-        read_only_fields = (
-            "id",
-            "created_at",
-            "updated_at",
-        )
-
-
-class KnowledgeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Knowledge
-        fields = "__all__"
-        read_only_fields = (
-            "id",
-            "created_at",
-            "updated_at",
-        )

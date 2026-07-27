@@ -1,0 +1,116 @@
+{
+    "wheat": [
+        "wheat",
+        "gehu",
+        "gehun",
+        "gehuu",
+        "गेहूं",
+        "गेहू",
+        "गेहु"
+    ],
+    "rice": [
+        "rice",
+        "paddy",
+        "dhan",
+        "daan",
+        "धान",
+        "चावल"
+    ],
+    "soybean": [
+        "soybean",
+        "soyabean",
+        "sojabean",
+        "soyabin",
+        "sojabin",
+        "soya bean",
+        "soya bin",
+        "सोयाबीन",
+        "सोयाबिन",
+        "सोया भीन",
+        "सोया बीन",
+        "सोया बिन"
+    ],
+    "cotton": [
+        "cotton",
+        "kapas",
+        "kapass",
+        "rui",
+        "कपास",
+        "रुई"
+    ],
+    "maize": [
+        "maize",
+        "corn",
+        "makka",
+        "makki",
+        "bhutta",
+        "मक्का",
+        "मक्की"
+    ],
+    "sugarcane": [
+        "sugarcane",
+        "ganna",
+        "eekh",
+        "ikh",
+        "गन्ना",
+        "ईख"
+    ],
+    "mustard": [
+        "mustard",
+        "sarson",
+        "sarso",
+        "rai",
+        "सरसों",
+        "सरसो",
+        "राई"
+    ],
+    "potato": [
+        "potato",
+        "aalu",
+        "alu",
+        "आलू",
+        "आलु"
+    ],
+    "tomato": [
+        "tomato",
+        "tamatar",
+        "tamaatar",
+        "टमाटर"
+    ],
+    "onion": [
+        "onion",
+        "pyaj",
+        "pyaz",
+        "kanda",
+        "प्याज",
+        "कांदा"
+    ],
+    "chili": [
+        "chili",
+        "chilli",
+        "mirch",
+        "mirchi",
+        "मिर्च",
+        "मिर्ची"
+    ],
+    "pulses": [
+        "pulses",
+        "gram",
+        "chana",
+        "arhar",
+        "tur",
+        "moong",
+        "urad",
+        "चना",
+        "अरहर",
+        "तुअर",
+        "मूंग",
+        "उड़द"
+    ],
+    "garlic": [
+        "garlic",
+        "lahsun",
+        "lahasun",
+        "लहसुन"
+    ]
+}
