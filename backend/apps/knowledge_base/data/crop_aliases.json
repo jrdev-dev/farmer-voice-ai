@@ -13,6 +13,7 @@
         "paddy",
         "dhan",
         "daan",
+        "chawal",
         "धान",
         "चावल"
     ],
@@ -45,7 +46,8 @@
         "makki",
         "bhutta",
         "मक्का",
-        "मक्की"
+        "मक्की",
+        "भुट्टा"
     ],
     "sugarcane": [
         "sugarcane",
@@ -95,22 +97,214 @@
     ],
     "pulses": [
         "pulses",
+        "dal",
+        "daal",
+        "दलहन",
+        "दाल"
+    ],
+    "chickpea": [
+        "chickpea",
         "gram",
         "chana",
+        "चना"
+    ],
+    "pigeon_pea": [
+        "pigeon pea",
         "arhar",
         "tur",
-        "moong",
-        "urad",
-        "चना",
+        "tuvar",
         "अरहर",
-        "तुअर",
-        "मूंग",
+        "तुअर"
+    ],
+    "mung": [
+        "mung",
+        "moong",
+        "green gram",
+        "मूंग"
+    ],
+    "urad": [
+        "urad",
+        "black gram",
         "उड़द"
+    ],
+    "lentil": [
+        "lentil",
+        "masoor",
+        "मसूर"
     ],
     "garlic": [
         "garlic",
         "lahsun",
         "lahasun",
         "लहसुन"
+    ],
+    "fennel": [
+        "fennel",
+        "saunf",
+        "sauf",
+        "सौंफ",
+        "सौफ",
+        "साईफ",
+        "साफ",
+        "सोफ"
+    ],
+    "ginger": [
+        "ginger",
+        "adrak",
+        "adrakh",
+        "अदरक"
+    ],
+    "turmeric": [
+        "turmeric",
+        "haldi",
+        "हल्दी"
+    ],
+    "coriander": [
+        "coriander",
+        "dhaniya",
+        "धनिया"
+    ],
+    "cumin": [
+        "cumin",
+        "jeera",
+        "जीरा"
+    ],
+    "groundnut": [
+        "groundnut",
+        "peanut",
+        "mungfali",
+        "moongfali",
+        "मूंगफली"
+    ],
+    "bajra": [
+        "bajra",
+        "pearl millet",
+        "बाजरा"
+    ],
+    "jowar": [
+        "jowar",
+        "sorghum",
+        "ज्वार"
+    ],
+    "barley": [
+        "barley",
+        "jau",
+        "जौ"
+    ],
+    "ragi": [
+        "ragi",
+        "finger millet",
+        "रागी"
+    ],
+    "sesame": [
+        "sesame",
+        "til",
+        "तिल"
+    ],
+    "sunflower": [
+        "sunflower",
+        "surajmukhi",
+        "सूरजमुखी"
+    ],
+    "castor": [
+        "castor",
+        "arandi",
+        "अरंडी"
+    ],
+    "brinjal": [
+        "brinjal",
+        "eggplant",
+        "baingan",
+        "बैंगन"
+    ],
+    "okra": [
+        "okra",
+        "ladyfinger",
+        "bhindi",
+        "भिंडी"
+    ],
+    "cabbage": [
+        "cabbage",
+        "patta gobhi",
+        "पत्ता गोभी"
+    ],
+    "cauliflower": [
+        "cauliflower",
+        "phool gobhi",
+        "फूल गोभी"
+    ],
+    "cucumber": [
+        "cucumber",
+        "kheera",
+        "खीरा"
+    ],
+    "pumpkin": [
+        "pumpkin",
+        "kaddu",
+        "कद्दू"
+    ],
+    "bottle_gourd": [
+        "bottle gourd",
+        "lauki",
+        "लौकी"
+    ],
+    "bitter_gourd": [
+        "bitter gourd",
+        "karela",
+        "करेला"
+    ],
+    "mango": [
+        "mango",
+        "aam",
+        "आम"
+    ],
+    "banana": [
+        "banana",
+        "kela",
+        "केला"
+    ],
+    "guava": [
+        "guava",
+        "amrood",
+        "अमरूद"
+    ],
+    "apple": [
+        "apple",
+        "seb",
+        "सेब"
+    ],
+    "papaya": [
+        "papaya",
+        "papita",
+        "पपीता"
+    ],
+    "pomegranate": [
+        "pomegranate",
+        "anar",
+        "अनार"
+    ],
+    "citrus": [
+        "citrus",
+        "lemon",
+        "nimbu",
+        "orange",
+        "santra",
+        "नींबू",
+        "संतरा"
+    ],
+    "watermelon": [
+        "watermelon",
+        "tarbuj",
+        "तरबूज"
+    ],
+    "muskmelon": [
+        "muskmelon",
+        "kharbuja",
+        "खरबूजा"
+    ],
+    "grapes": [
+        "grapes",
+        "angoor",
+        "अंगूर"
     ]
 }

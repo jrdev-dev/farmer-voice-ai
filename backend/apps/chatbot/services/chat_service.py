@@ -862,6 +862,21 @@ class ChatService:
         response["message_id"] = assistant_message.id if assistant_message else None
 
         # =====================================================
+        # 23.1 TTS Audio Synthesis for Speaker Playback
+        # =====================================================
+        if answer:
+            try:
+                from apps.speech.services.text_to_speech_service import TextToSpeechService
+                tts = TextToSpeechService()
+                target_lang = response.get("language") or language or "hi"
+                tts_result = tts.synthesize(text=answer, language=target_lang)
+                if tts_result.get("audio_url"):
+                    response["audio_url"] = tts_result.get("audio_url")
+                    response["voice"] = tts_result.get("voice")
+            except Exception as tts_exc:
+                logger.warning("ChatService TTS synthesis skipped: %s", tts_exc)
+
+        # =====================================================
         # 24. Final Validation
         # =====================================================
 

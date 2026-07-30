@@ -112,7 +112,10 @@
         "seed",
         "बीज",
         "beej",
-        "bij"
+        "bij",
+        "varity",
+        "kism",
+        "किस्म"
     ],
     "yield": [
         "yield",
@@ -124,5 +127,114 @@
         "उपज",
         "पैदावार",
         "उत्पादन"
+    ],
+    "soil": [
+        "soil",
+        "mitti",
+        "bhumi",
+        "zameen",
+        "land",
+        "मिट्टी",
+        "भूमि",
+        "जमीन",
+        "मृदा"
+    ],
+    "sowing": [
+        "sowing",
+        "buwai",
+        "buvai",
+        "ropai",
+        "sow",
+        "बुवाई",
+        "बुआई",
+        "रोपाई",
+        "बोना"
+    ],
+    "harvest": [
+        "harvest",
+        "harvesting",
+        "katai",
+        "कटाई",
+        "कटाई-मड़ाई"
+    ],
+    "weather": [
+        "weather",
+        "climate",
+        "rain",
+        "baarish",
+        "barish",
+        "mausam",
+        "मौसम",
+        "बारिश",
+        "वर्षा"
+    ],
+    "market": [
+        "mandi",
+        "market",
+        "bhav",
+        "price",
+        "rate",
+        "daam",
+        "मंडी",
+        "भाव",
+        "दाम",
+        "कीमत"
+    ],
+    "organic": [
+        "organic",
+        "vermicompost",
+        "gobar khad",
+        "jaivik",
+        "जैविक",
+        "वर्मीकंपोस्ट"
+    ],
+    "khadar": [
+        "khadar",
+        "खादर",
+        "khadar soil"
+    ],
+    "bhangar": [
+        "bhangar",
+        "bangar",
+        "भांगर",
+        "बांगर",
+        "bhangar soil"
+    ],
+    "ginger": [
+        "ginger",
+        "अदरक",
+        "adrak"
+    ],
+    "wheat": [
+        "wheat",
+        "गेहूं",
+        "गेहुं",
+        "gehu"
+    ],
+    "red soil": [
+        "red soil",
+        "लाल मिट्टी",
+        "laal mitti",
+        "लाल मृदा",
+        "red clay"
+    ],
+    "nutrients": [
+        "nutrients",
+        "nutrient",
+        "पोषक तत्व",
+        "पोषक तत्वों",
+        "poshak tatva",
+        "element"
+    ],
+    "black soil": [
+        "black soil",
+        "काली मिट्टी",
+        "kali mitti",
+        "काली मृदा"
+    ],
+    "alluvial soil": [
+        "alluvial soil",
+        "जलोढ़ मिट्टी",
+        "jalodh mitti"
     ]
 }

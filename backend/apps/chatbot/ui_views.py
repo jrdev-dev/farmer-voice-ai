@@ -11,6 +11,16 @@ def login_page(request):
     )
 
 
+def register_page(request):
+    """
+    Farmer Voice AI register/signup page.
+    """
+    return render(
+        request,
+        "chatbot_ui/signup.html",
+    )
+
+
 def chat_page(request):
     """
     Farmer Voice AI main chat interface.

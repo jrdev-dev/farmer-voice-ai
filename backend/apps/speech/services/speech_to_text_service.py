@@ -116,8 +116,8 @@ class SpeechToTextService:
 
     INITIAL_PROMPTS = {
         "hi": (
-            "यह भारतीय किसान की कृषि बातचीत है: सोयाबीन, गेहूं, धान, मक्का, कपास, आलू, सरसों, खाद, यूरिया, डीएपी, पोटाश, सिंचाई, पानी, रोग, कीट, इल्ली, दवा, छिड़काव, उपज। "
-            "बोले गए कृषि शब्दों और फसलों के नाम (जैसे सोयाबीन, खाद, कौन सी दवा) को बिल्कुल सही हिंदी में ट्रांसक्राइब करें।"
+            "यह भारतीय किसान की कृषि बातचीत है: लाल मिट्टी, काली मिट्टी, जलोढ़ मिट्टी, मिट्टी, पोषक तत्व, खाद, पोटाश, जिंक, डीएपी, सोयाबीन, गेहूं, धान, मक्का, कपास, आलू, सरसों, सौंफ, मिर्च, सिंचाई, बुवाई, पानी, रोग, कीट, इल्ली, दवा, छिड़काव, उपज। "
+            "बोले गए कृषि शब्दों और प्रश्नों (जैसे लाल मिट्टी में मुख्य रूप से कौन से पोषक तत्व पाए जाते हैं) को बिल्कुल सही हिंदी देवनागरी में ट्रांसक्राइब करें। अंग्रेजी में अनुवाद न करें।"
         ),
         "en": (
             "This is an agricultural conversation with an Indian farmer. "
@@ -709,10 +709,12 @@ class SpeechToTextService:
         dynamic_vocabulary = self._get_dynamic_vocabulary_prompt()
 
         if not dynamic_vocabulary:
-
             return base_prompt
 
-        return f"{base_prompt} " f"Relevant vocabulary: " f"{dynamic_vocabulary}."
+        if language == "hi":
+            return f"{base_prompt} संबंधित कृषि शब्दावली: {dynamic_vocabulary}."
+
+        return f"{base_prompt} Relevant vocabulary: {dynamic_vocabulary}."
 
     # =========================================================
     # Transcript Validation

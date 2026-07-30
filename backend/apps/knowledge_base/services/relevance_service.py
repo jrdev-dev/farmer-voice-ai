@@ -228,7 +228,30 @@ class RelevanceService:
         evidence_count = len(evidence)
 
         # =====================================================
-        # 4. Strong Semantic + Lexical
+        # 4. Strong Lexical / Question Match (Universal)
+        # =====================================================
+
+        if (
+            question_raw >= 0.80
+            or fuzzy_raw >= 75.0
+            or keyword_raw >= 15.0
+            or (keyword_raw >= 8.0 and fuzzy_raw >= 60.0)
+        ):
+
+            return self._response(
+                is_relevant=True,
+                reason="Strong exact or high lexical relevance.",
+                evidence=evidence,
+                keyword_raw=keyword_raw,
+                bm25_raw=bm25_raw,
+                fuzzy_raw=fuzzy_raw,
+                semantic_raw=semantic_raw,
+                question_raw=question_raw,
+                crop_validation=crop_guard,
+            )
+
+        # =====================================================
+        # 5. Strong Semantic + Lexical
         # =====================================================
 
         if semantic_raw >= self.STRONG_SEMANTIC_SCORE and (
@@ -248,7 +271,7 @@ class RelevanceService:
             )
 
         # =====================================================
-        # 5. Strong BM25 + Semantic
+        # 6. Strong BM25 + Semantic
         # =====================================================
 
         if (
@@ -269,7 +292,7 @@ class RelevanceService:
             )
 
         # =====================================================
-        # 6. Strong Question + Semantic
+        # 7. Strong Question + Semantic
         # =====================================================
 
         if (
@@ -290,7 +313,7 @@ class RelevanceService:
             )
 
         # =====================================================
-        # 7. Strong Fuzzy + Semantic
+        # 8. Strong Fuzzy + Semantic
         # =====================================================
 
         if (
@@ -311,24 +334,14 @@ class RelevanceService:
             )
 
         # =====================================================
-        # 8. Multi-Retriever Agreement
-        # =====================================================
-        #
-        # Semantic evidence remains mandatory here.
-        #
-        # Otherwise several lexical retrievers could agree
-        # simply because generic agriculture words such as
-        # fertilizer/pest/spray occur in unrelated records.
+        # 9. Multi-Retriever Agreement
         # =====================================================
 
-        if (
-            evidence_count >= self.MIN_EVIDENCE_COUNT
-            and semantic_raw >= self.MIN_SEMANTIC_SCORE
-        ):
+        if evidence_count >= self.MIN_EVIDENCE_COUNT:
 
             return self._response(
                 is_relevant=True,
-                reason=("Multiple independent retrieval " "methods agree."),
+                reason=("Multiple independent retrieval methods agree."),
                 evidence=evidence,
                 keyword_raw=keyword_raw,
                 bm25_raw=bm25_raw,
@@ -339,12 +352,12 @@ class RelevanceService:
             )
 
         # =====================================================
-        # 9. Reject Weak Retrieval
+        # 10. Reject Weak Retrieval
         # =====================================================
 
         return self._response(
             is_relevant=False,
-            reason=("Insufficient independent raw retrieval " "evidence."),
+            reason=("Insufficient independent raw retrieval evidence."),
             evidence=evidence,
             keyword_raw=keyword_raw,
             bm25_raw=bm25_raw,

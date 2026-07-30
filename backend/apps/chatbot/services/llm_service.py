@@ -89,12 +89,10 @@ class LLMService:
         prompt: str,
     ) -> str:
         """
-        Generate one non-streaming response from Ollama.
-
-        Raises RuntimeError when inference cannot be completed.
-
-        GenerationService catches these failures and can safely
-        fall back to trusted knowledge.
+        Generate response using Tri-Tier Inference:
+        1. Groq API (Ultra-Fast 0.3s) if GROQ_API_KEY is configured.
+        2. Google Gemini API (1.0s) if GEMINI_API_KEY is configured.
+        3. Local Ollama CPU (Offline Fallback).
         """
 
         # =====================================================
@@ -111,15 +109,189 @@ class LLMService:
 
             raise RuntimeError("LLM prompt cannot be empty.")
 
-        # Protect against accidental giant prompts.
-
         if len(prompt) > self.MAX_PROMPT_LENGTH:
 
             raise RuntimeError("LLM prompt exceeds the maximum allowed length.")
 
         # =====================================================
-        # 2. Build Ollama Payload
+        # Tier 1: Groq Cloud API (Ultra-Fast ~0.3s)
         # =====================================================
+
+        groq_key = os.getenv("GROQ_API_KEY")
+
+        if groq_key:
+
+            try:
+
+                groq_answer = self._generate_groq(prompt, groq_key)
+
+                if groq_answer:
+
+                    print("LLM INFERENCE: Generated via Groq API (0.3s)")
+
+                    return groq_answer
+
+            except Exception as exc:
+
+                print(f"Groq API skipped/failed: {exc}")
+
+        # =====================================================
+        # Tier 2: Google Gemini API (High Accuracy ~1.0s)
+        # =====================================================
+
+        gemini_key = os.getenv("GEMINI_API_KEY")
+
+        if gemini_key:
+
+            try:
+
+                gemini_answer = self._generate_gemini(prompt, gemini_key)
+
+                if gemini_answer:
+
+                    print("LLM INFERENCE: Generated via Google Gemini API (1.0s)")
+
+                    return gemini_answer
+
+            except Exception as exc:
+
+                print(f"Google Gemini API skipped/failed: {exc}")
+
+        # =====================================================
+        # Tier 3: Local Ollama CPU (Offline Fallback)
+        # =====================================================
+
+        return self._generate_ollama(prompt)
+
+    # =========================================================
+    # Groq API Provider
+    # =========================================================
+
+    def _generate_groq(self, prompt: str, api_key: str) -> Optional[str]:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.05,
+            "max_tokens": 300,
+        }
+
+        try:
+            response = requests.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=6,
+            )
+
+            if response.status_code == 200:
+
+                data = response.json()
+
+                choices = data.get("choices", [])
+
+                if choices:
+
+                    msg = choices[0].get("message", {})
+
+                    content = msg.get("content", "").strip()
+
+                    if content:
+
+                        return content
+
+            elif response.status_code == 429:
+
+                print("⚠️ Groq API Rate Limit Exceeded (HTTP 429) -> Auto-switching to next tier...")
+
+            elif response.status_code in (401, 403):
+
+                print("⚠️ Groq API Key Expired/Invalid (HTTP 401/403) -> Auto-switching to next tier...")
+
+            else:
+
+                print(f"⚠️ Groq API HTTP {response.status_code} -> Auto-switching to next tier...")
+
+        except Exception as exc:
+
+            print(f"⚠️ Groq API Network Error: {exc} -> Auto-switching to next tier...")
+
+        return None
+
+    # =========================================================
+    # Google Gemini API Provider
+    # =========================================================
+
+    def _generate_gemini(self, prompt: str, api_key: str) -> Optional[str]:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+
+        headers = {"Content-Type": "application/json"}
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.05,
+                "maxOutputTokens": 300,
+            },
+        }
+
+        try:
+            response = requests.post(
+                url,
+                headers=headers,
+                json=payload,
+                timeout=8,
+            )
+
+            if response.status_code == 200:
+
+                data = response.json()
+
+                candidates = data.get("candidates", [])
+
+                if candidates:
+
+                    parts = candidates[0].get("content", {}).get("parts", [])
+
+                    if parts:
+
+                        content = parts[0].get("text", "").strip()
+
+                        if content:
+
+                            return content
+
+            elif response.status_code == 429:
+
+                print("⚠️ Gemini API Rate/Quota Limit Exceeded (HTTP 429) -> Auto-switching to Ollama CPU...")
+
+            elif response.status_code in (401, 403):
+
+                print("⚠️ Gemini API Key Expired/Invalid (HTTP 401/403) -> Auto-switching to Ollama CPU...")
+
+            else:
+
+                print(f"⚠️ Gemini API HTTP {response.status_code} -> Auto-switching to Ollama CPU...")
+
+        except Exception as exc:
+
+            print(f"⚠️ Gemini API Network Error: {exc} -> Auto-switching to Ollama CPU...")
+
+        return None
+
+    # =========================================================
+    # Local Ollama CPU Provider
+    # =========================================================
+
+    def _generate_ollama(self, prompt: str) -> str:
 
         payload = {
             "model": self.model,

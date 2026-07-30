@@ -48,6 +48,8 @@ class ResponseValidator:
         "intent",
         "fallback_used",
         "fallback_source",
+        "audio_url",
+        "voice",
     }
 
     VALID_MATCH_TYPES = {
@@ -594,6 +596,8 @@ class ResponseValidator:
             "conversation_id",
             "message_id",
             "intent",
+            "audio_url",
+            "voice",
         ):
 
             value = response.get(field)

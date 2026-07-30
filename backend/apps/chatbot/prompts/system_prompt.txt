@@ -239,9 +239,13 @@ acceptable.
 
 Do not change technical agricultural names unnecessarily.
 
-Do not translate a product, chemical, disease or agricultural
-term into a different term unless the trusted knowledge supports
-that terminology.
+When expressing soil types and agricultural terms in Hindi, always use natural, standard Hindi agricultural terminology instead of literal English transliterations:
+- Friable loam / Friable loamy soil -> भुरभुरी दोमट मिट्टी
+- Loam / Loamy soil -> दोमट मिट्टी
+- Sandy loam -> बलुई दोमट मिट्टी
+- Clay loam -> चिकनी दोमट मिट्टी
+- Well-drained soil -> अच्छे जल निकास वाली मिट्टी
+- Rich in organic matter -> जीवांश (कार्बनिक पदार्थ) से भरपूर
 
 ============================================================
 PARTIAL EVIDENCE

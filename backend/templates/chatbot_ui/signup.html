@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Voice AI | Create Account</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'chatbot_ui/css/style.css' %}">
+</head>
+
+<body class="auth-page">
+
+    <div class="auth-bg-decorations">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="glow-orb orb-3"></div>
+    </div>
+
+    <main class="auth-container">
+        
+        <div class="auth-card">
+            
+            <!-- Branding Header -->
+            <div class="auth-brand">
+                <div class="brand-logo-badge">
+                    <span class="brand-emoji">🌾</span>
+                </div>
+                <h1 class="brand-heading">Create Account</h1>
+                <p class="brand-subtext">Join Farmer Voice AI for precision agriculture guidance</p>
+            </div>
+
+            <!-- Global Message Alert -->
+            <div id="authMessage" class="auth-alert" role="alert" hidden></div>
+
+            <!-- ======================================================= -->
+            <!-- REGISTER FORM -->
+            <!-- ======================================================= -->
+            <form id="registerForm" class="auth-form active">
+                <div class="input-group">
+                    <label for="regName">Full Name</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="regName" name="name" placeholder="Rajesh Kumar" autocomplete="name" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="regEmail">Email Address</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="regEmail" name="email" placeholder="farmer@example.com" autocomplete="email" required>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="regPassword">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔑</span>
+                        <input type="password" id="regPassword" name="password" placeholder="Min 8 characters" autocomplete="new-password" required>
+                        <button type="button" id="toggleRegPassword" class="pwd-toggle-btn" aria-label="Toggle Password">👁️</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="regLanguage">Preferred Language</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🌐</span>
+                        <select id="regLanguage" name="preferred_language">
+                            <option value="hi" selected>हिन्दी (Hindi)</option>
+                            <option value="en">English</option>
+                            <option value="hinglish">Hinglish</option>
+                            <option value="mr">मराठी (Marathi)</option>
+                            <option value="gu">ગુજરાતી (Gujarati)</option>
+                            <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                            <option value="ta">தமிழ் (Tamil)</option>
+                            <option value="te">తెలుగు (Telugu)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" id="registerSubmitBtn" class="btn-primary">
+                    <span class="btn-label">Create Account</span>
+                    <span class="btn-spinner" hidden></span>
+                </button>
+            </form>
+
+            <!-- Navigation Link back to Dedicated Login Page -->
+            <div class="auth-switch-prompt">
+                <p>Already have an account? <a href="/" class="switch-link">Sign In →</a></p>
+            </div>
+
+            <!-- Feature Pills -->
+            <div class="auth-features">
+                <div class="feature-chip">🎤 Real-Time Voice AI</div>
+                <div class="feature-chip">🌾 45+ Crop Knowledge</div>
+                <div class="feature-chip">⚡ Zero-Latency RAG</div>
+            </div>
+
+            <footer class="auth-footer">
+                <p>AI-Powered Precision Agriculture • Powered by Universal Hybrid RAG</p>
+            </footer>
+
+        </div>
+
+    </main>
+
+    <script src="{% static 'chatbot_ui/js/login.js' %}"></script>
+</body>
+
+</html>

@@ -107,6 +107,7 @@ class VectorStore:
         cls._shared_knowledge_ids = self.knowledge_ids
         cls._shared_dimension = self.dimension
         cls._shared_metadata = self.metadata
+        cls._shared_mtime = self.INDEX_FILE.stat().st_mtime if self.INDEX_FILE.exists() else 0.0
 
         cls._cache_loaded = self.index is not None
 
@@ -515,13 +516,20 @@ class VectorStore:
         """
         cls = type(self)
 
-        # Another VectorStore instance already loaded FAISS.
+        current_mtime = self.INDEX_FILE.stat().st_mtime if self.INDEX_FILE.exists() else 0.0
+        last_mtime = getattr(cls, "_shared_mtime", 0.0)
+
+        # Another VectorStore instance already loaded FAISS and index file has not changed.
         # Reuse it instead of reading index files again.
-        if cls._cache_loaded and cls._shared_index is not None:
+        if cls._cache_loaded and cls._shared_index is not None and last_mtime == current_mtime:
 
             self._sync_from_shared_cache()
 
             return True
+
+        if cls._cache_loaded and last_mtime != current_mtime:
+            cls.invalidate_cache()
+
         index_exists = self.INDEX_FILE.exists()
 
         ids_exist = self.IDS_FILE.exists()

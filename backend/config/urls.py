@@ -11,6 +11,7 @@ from drf_spectacular.views import (
 from apps.chatbot.ui_views import (
     chat_page,
     login_page,
+    register_page,
 )
 
 urlpatterns = [
@@ -21,6 +22,11 @@ urlpatterns = [
         "",
         login_page,
         name="login-page",
+    ),
+    path(
+        "register/",
+        register_page,
+        name="register-page",
     ),
     path(
         "chat/",

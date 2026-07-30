@@ -879,8 +879,10 @@ function appendAssistantMessage(result) {
     );
 
 
+    const isGreeting = Boolean(result?.isGreeting || result?.is_greeting || false);
+
     // ========================================================
-    // METADATA
+    // METADATA (Skip for Greeting Messages)
     // ========================================================
 
     const metadata =
@@ -902,6 +904,7 @@ function appendAssistantMessage(result) {
 
 
     if (
+        !isGreeting &&
         confidence !== undefined &&
         confidence !== null
     ) {
@@ -932,7 +935,7 @@ function appendAssistantMessage(result) {
         result?.language;
 
 
-    if (language) {
+    if (language && !isGreeting) {
 
         const languageElement =
             document.createElement(
@@ -963,107 +966,9 @@ function appendAssistantMessage(result) {
 
 
     // ========================================================
-    // SOURCES
+    // SOURCES (Removed per user directive)
     // ========================================================
-
-    const sources =
-        Array.isArray(
-            result?.sources
-        )
-            ? result.sources
-            : [];
-
-
-    if (sources.length) {
-
-        const sourceContainer =
-            document.createElement(
-                "div"
-            );
-
-
-        sourceContainer.className =
-            "message-sources";
-
-
-        const sourceHeading =
-            document.createElement(
-                "div"
-            );
-
-
-        sourceHeading.className =
-            "source-heading";
-
-
-        sourceHeading.textContent =
-            "Sources";
-
-
-        sourceContainer.appendChild(
-            sourceHeading
-        );
-
-
-        sources.forEach(
-            (source) => {
-
-                const sourceItem =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                sourceItem.className =
-                    "source-item";
-
-
-                const name =
-                    source?.name ||
-                    source?.citation ||
-                    "Knowledge source";
-
-
-                sourceItem.textContent =
-                    name;
-
-
-                if (
-                    source?.matched_question
-                ) {
-
-                    const matched =
-                        document.createElement(
-                            "div"
-                        );
-
-
-                    matched.className =
-                        "source-match";
-
-
-                    matched.textContent =
-                        `Matched: ${source.matched_question}`;
-
-
-                    sourceItem.appendChild(
-                        matched
-                    );
-                }
-
-
-                sourceContainer.appendChild(
-                    sourceItem
-                );
-
-            }
-        );
-
-
-        bubble.appendChild(
-            sourceContainer
-        );
-    }
+    const sources = [];
 
 
     // ========================================================
@@ -1073,6 +978,53 @@ function appendAssistantMessage(result) {
     const messageId =
         result?.message_id;
 
+
+    // ========================================================
+    // SPEAKER / LISTEN BUTTON (FOR REGULAR QA RESPONSES ONLY)
+    // ========================================================
+    if (!isGreeting) {
+        const speakerButton = document.createElement("button");
+        speakerButton.type = "button";
+        speakerButton.className = "speaker-listen-btn";
+        speakerButton.innerHTML = "🔊 Listen Answer / उत्तर सुनें";
+        speakerButton.title = "Tap to listen to this answer as many times as you want";
+        
+        let activeAudio = null;
+        speakerButton.addEventListener("click", () => {
+            const audioUrl = result?.audio_url || result?.tts_url || result?.speech_url;
+            if (audioUrl) {
+                if (activeAudio) {
+                    activeAudio.pause();
+                    activeAudio.currentTime = 0;
+                }
+                activeAudio = new Audio(audioUrl);
+                speakerButton.innerHTML = "🔊 Playing Answer...";
+                activeAudio.play().then(() => {
+                    activeAudio.onended = () => {
+                        speakerButton.innerHTML = "🔊 Listen Answer / उत्तर सुनें";
+                    };
+                }).catch(() => {
+                    speakFallbackWebSpeech(answer, result?.language, speakerButton);
+                });
+            } else {
+                speakFallbackWebSpeech(answer, result?.language, speakerButton);
+            }
+        });
+
+        function speakFallbackWebSpeech(textToSpeak, lang, btn) {
+            if (!("speechSynthesis" in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = lang === "en" ? "en-IN" : "hi-IN";
+            btn.innerHTML = "🔊 Speaking Answer...";
+            utterance.onend = () => {
+                btn.innerHTML = "🔊 Listen Answer / उत्तर सुनें";
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        bubble.appendChild(speakerButton);
+    }
 
     if (messageId) {
 
@@ -6241,3 +6193,88 @@ checkImageUploadAvailability();
 console.log(
     "Farmer Voice AI frontend script loaded successfully."
 );
+
+// ============================================================
+// UI ENHANCEMENTS: THEME TOGGLE & QUICK PROMPTS
+// ============================================================
+document.addEventListener("DOMContentLoaded", () => {
+    // Theme Toggle
+    const themeBtn = document.getElementById("themeToggleBtn");
+    const savedTheme = localStorage.getItem("farmer_ui_theme") || "light";
+    if (savedTheme === "dark") {
+        document.body.setAttribute("data-theme", "dark");
+        if (themeBtn) themeBtn.textContent = "☀️";
+    }
+
+    themeBtn?.addEventListener("click", () => {
+        const isDark = document.body.getAttribute("data-theme") === "dark";
+        if (isDark) {
+            document.body.removeAttribute("data-theme");
+            localStorage.setItem("farmer_ui_theme", "light");
+            themeBtn.textContent = "🌙";
+        } else {
+            document.body.setAttribute("data-theme", "dark");
+            localStorage.setItem("farmer_ui_theme", "dark");
+            themeBtn.textContent = "☀️";
+        }
+    });
+
+    // Quick Prompts / Cards Click
+    document.querySelectorAll("[data-prompt]").forEach(elem => {
+        elem.addEventListener("click", () => {
+            const promptText = elem.getAttribute("data-prompt");
+            const inputField = document.getElementById("messageInput");
+            const form = document.getElementById("chatForm");
+            if (inputField && promptText) {
+                inputField.value = promptText;
+                if (form) form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        });
+    });
+
+    // Mobile Menu Drawer
+    const mobileBtn = document.getElementById("mobileMenuButton");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    const toggleSidebar = () => {
+        sidebar?.classList.toggle("open");
+        if (overlay) overlay.style.display = sidebar?.classList.contains("open") ? "block" : "none";
+    };
+
+    mobileBtn?.addEventListener("click", toggleSidebar);
+    overlay?.addEventListener("click", toggleSidebar);
+
+    // Close Voice Recording Modal
+    const closeVoiceBtn = document.getElementById("closeVoiceModal");
+    closeVoiceBtn?.addEventListener("click", () => {
+        const vModal = document.getElementById("voiceModal");
+        if (vModal) {
+            vModal.hidden = true;
+            vModal.classList.remove("active");
+            vModal.style.display = "none";
+        }
+    });
+
+    // Automatic Chatbot Greeting Upon Login
+    setTimeout(() => {
+        try {
+            const rawUser = localStorage.getItem("farmer_user");
+            let userNameStr = "Farmer";
+            if (rawUser) {
+                const uObj = JSON.parse(rawUser);
+                userNameStr = uObj.name || uObj.full_name || uObj.first_name || "Farmer";
+            }
+            const welcomePan = document.getElementById("welcomePanel");
+            if (welcomePan) welcomePan.style.display = "none";
+
+            appendAssistantMessage({
+                answer: `Namaste ${userNameStr}! 🌾 Welcome to Farmer Voice AI. How can I assist your farming today? Ask any question by text, voice, or crop image!`,
+                isGreeting: true
+            });
+        } catch (greetErr) {
+            console.warn("Greeting render error:", greetErr);
+        }
+    }, 300);
+});
+

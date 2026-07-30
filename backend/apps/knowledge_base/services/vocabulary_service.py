@@ -38,7 +38,7 @@ class VocabularyService:
     # Development-friendly default.
     # Database vocabulary automatically refreshes after this
     # many seconds.
-    CACHE_TTL_SECONDS = 300
+    CACHE_TTL_SECONDS = 5
 
     _cache: Dict[str, Any] = {}
     _cache_created_at: Dict[str, float] = {}

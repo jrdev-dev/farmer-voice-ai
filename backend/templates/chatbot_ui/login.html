@@ -4,152 +4,96 @@
 
 <head>
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Voice AI | Sign In</title>
 
-    <title>Farmer Voice AI | Login</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{% static 'chatbot_ui/css/style.css' %}">
 </head>
 
-<body class="login-page">
+<body class="auth-page">
 
-    <main class="login-wrapper">
+    <div class="auth-bg-decorations">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="glow-orb orb-3"></div>
+    </div>
 
-        <section class="login-card">
-
-            <!-- ============================================= -->
-            <!-- Branding -->
-            <!-- ============================================= -->
-
-            <div class="login-brand">
-
-                <div class="brand-icon">
-                    🌾
+    <main class="auth-container">
+        
+        <div class="auth-card">
+            
+            <!-- Branding Header -->
+            <div class="auth-brand">
+                <div class="brand-logo-badge">
+                    <span class="brand-emoji">🌾</span>
                 </div>
-
-                <h1>
-                    Farmer Voice AI
-                </h1>
-
-                <p>
-                    Multilingual Agricultural Assistant
-                </p>
-
+                <h1 class="brand-heading">Welcome Back</h1>
+                <p class="brand-subtext">Sign in to your Farmer Voice AI Account</p>
             </div>
 
+            <!-- Global Message Alert -->
+            <div id="authMessage" class="auth-alert" role="alert" hidden></div>
 
-            <!-- ============================================= -->
-            <!-- Login Heading -->
-            <!-- ============================================= -->
-
-            <div class="login-heading">
-
-                <h2>
-                    Welcome Back
-                </h2>
-
-                <p>
-                    Login to ask your farming questions
-                    using text or voice.
-                </p>
-
-            </div>
-
-
-            <!-- ============================================= -->
-            <!-- Error Message -->
-            <!-- ============================================= -->
-
-            <div id="loginMessage" class="form-message" role="alert" hidden></div>
-
-
-            <!-- ============================================= -->
-            <!-- Login Form -->
-            <!-- ============================================= -->
-
-            <form id="loginForm" class="login-form">
-
-                <div class="form-group">
-
-                    <label for="email">
-                        Email Address
-                    </label>
-
-                    <input type="email" id="email" name="email" placeholder="farmer@example.com" autocomplete="email"
-                        required>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="password">
-                        Password
-                    </label>
-
-                    <div class="password-wrapper">
-
-                        <input type="password" id="password" name="password" placeholder="Enter your password"
-                            autocomplete="current-password" required>
-
-                        <button type="button" id="togglePassword" class="password-toggle" aria-label="Show password">
-                            👁
-                        </button>
-
+            <!-- ======================================================= -->
+            <!-- LOGIN FORM -->
+            <!-- ======================================================= -->
+            <form id="loginForm" class="auth-form active">
+                <div class="input-group">
+                    <label for="loginEmail">Email Address</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📧</span>
+                        <input type="email" id="loginEmail" name="email" placeholder="farmer@example.com" autocomplete="email" required>
                     </div>
-
                 </div>
 
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="loginPassword" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                        <button type="button" id="toggleLoginPassword" class="pwd-toggle-btn" aria-label="Toggle Password">👁️</button>
+                    </div>
+                </div>
 
-                <button type="submit" id="loginButton" class="primary-button">
-                    <span id="loginButtonText">
-                        Login
-                    </span>
-
-                    <span id="loginLoader" class="button-loader" hidden></span>
+                <button type="submit" id="loginSubmitBtn" class="btn-primary">
+                    <span class="btn-label">Sign In to Assistant</span>
+                    <span class="btn-spinner" hidden></span>
                 </button>
-
             </form>
 
-
-            <!-- ============================================= -->
-            <!-- Feature Information -->
-            <!-- ============================================= -->
-
-            <div class="login-features">
-
-                <span>
-                    🎤 Voice Questions
-                </span>
-
-                <span>
-                    💬 AI Answers
-                </span>
-
-                <span>
-                    🔊 Voice Response
-                </span>
-
+            <!-- Navigation Link to Dedicated Register Page -->
+            <div class="auth-switch-prompt">
+                <p>New to Farmer Voice AI? <a href="/register/" class="switch-link">Create an Account →</a></p>
             </div>
 
-
-            <div class="login-footer">
-
-                <p>
-                    AI-powered agricultural guidance
-                    using trusted knowledge sources.
-                </p>
-
+            <!-- Admin Shortcut & Links -->
+            <div class="auth-extra-links">
+                <a href="/admin/" target="_blank" class="admin-portal-link">
+                    🛡️ Admin Control Panel Access
+                </a>
             </div>
 
-        </section>
+            <!-- Feature Pills -->
+            <div class="auth-features">
+                <div class="feature-chip">🎤 Real-Time Voice AI</div>
+                <div class="feature-chip">🌾 45+ Crop Knowledge</div>
+                <div class="feature-chip">⚡ Zero-Latency RAG</div>
+            </div>
+
+            <footer class="auth-footer">
+                <p>AI-Powered Precision Agriculture • Powered by Universal Hybrid RAG</p>
+            </footer>
+
+        </div>
 
     </main>
 
-
     <script src="{% static 'chatbot_ui/js/login.js' %}"></script>
-
 </body>
 
 </html>

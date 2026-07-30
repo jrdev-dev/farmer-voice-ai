@@ -349,10 +349,11 @@ class GenerationService:
                 fallback_source = "safe_fallback"
 
         # =====================================================
-        # 9. Final Empty-Answer Protection
+        # 9. Final Empty-Answer Protection & Hindi Terminology Sanitization
         # =====================================================
 
         answer = self._clean_text(answer)
+        answer = self._sanitize_hindi_terminology(answer)
 
         if not answer:
 
@@ -673,3 +674,65 @@ class GenerationService:
         )
 
         print("=" * 80 + "\n")
+
+    @staticmethod
+    def _sanitize_hindi_terminology(text: str) -> str:
+        """
+        Universal Softcoded Agricultural Language Converter.
+        Converts English agricultural phrases & transliterated words in Hindi responses
+        into pure, natural Devanagari Hindi agricultural terminology.
+        """
+        if not text:
+            return ""
+
+        import re
+
+        universal_phrase_mappings = [
+            # Soil Types & Attributes
+            (r"friable\s+loam\s+(?:and\s+)?well-drained\s+fertile\s+soil", "अच्छे जल निकास वाली भुरभुरी दोमट मिट्टी"),
+            (r"friable\s+loamy?\s+soil", "भुरभुरी दोमट मिट्टी"),
+            (r"friable\s+loam", "भुरभुरी दोमट मिट्टी"),
+            (r"sandy\s+loamy?\s+soil", "बलुई दोमट मिट्टी"),
+            (r"sandy\s+loam", "बलुई दोमट मिट्टी"),
+            (r"clay\s+loamy?\s+soil", "चिकनी दोमट मिट्टी"),
+            (r"clay\s+loam", "चिकनी दोमट मिट्टी"),
+            (r"silt\s+loamy?\s+soil", "गाद दोमट मिट्टी"),
+            (r"loamy?\s+soil", "दोमट मिट्टी"),
+            (r"black\s+soil", "काली मिट्टी"),
+            (r"red\s+soil", "लाल मिट्टी"),
+            (r"alluvial\s+soil", "जलोढ़ मिट्टी"),
+            (r"well[- ]drained\s+soil", "अच्छे जल निकास वाली मिट्टी"),
+            (r"well[- ]drained", "अच्छे जल निकास वाली"),
+            (r"rich\s+in\s+organic\s+matter", "जीवांश (कार्बनिक पदार्थ) से भरपूर"),
+
+            # Transliteration Fixes
+            (r"फ़्रिबल\s+लोम\s+और\s+सामूचा\s+जड़ेवान\s+रुचिर\s+मिट्टी", "अच्छे जल निकास वाली भुरभुरी दोमट मिट्टी"),
+            (r"फ़्रिबल\s+लोम", "भुरभुरी दोमट मिट्टी"),
+            (r"फ्रीबल\s+लोम", "भुरभुरी दोमट मिट्टी"),
+            (r"फ्रिबल\s+लोम", "भुरभुरी दोमट मिट्टी"),
+            (r"फ़्रिबल", "भुरभुरी"),
+            (r"सामूचा\s+जड़ेवान", "अच्छे जल निकास वाली"),
+            (r"रुचिर\s+मिट्टी", "उपजाऊ दोमट मिट्टी"),
+            (r"सेंडी\s+लोम", "बलुई दोमट मिट्टी"),
+            (r"सैंडी\s+लोम", "बलुई दोमट मिट्टी"),
+            (r"क्ले\s+लोम", "चिकनी दोमट मिट्टी"),
+
+            # Agronomic Practices & Terms
+            (r"sowing\s+time", "बुवाई का समय"),
+            (r"sowing\s+season", "बुवाई का मौसम"),
+            (r"seed\s+rate", "बीज दर"),
+            (r"seed\s+treatment", "बीज उपचार"),
+            (r"irrigation\s+schedule", "सिंचाई का समय"),
+            (r"pest\s+management", "कीट प्रबंधन"),
+            (r"disease\s+control", "रोग नियंत्रण"),
+            (r"weed\s+control", "खरपतवार नियंत्रण"),
+            (r"organic\s+manure", "जैविक खाद"),
+            (r"vermicompost", "वर्मीकंपोस्ट"),
+            (r"harvesting\s+time", "कटाई का समय"),
+        ]
+
+        sanitized = text
+        for pattern, replacement in universal_phrase_mappings:
+            sanitized = re.sub(pattern, replacement, sanitized, flags=re.IGNORECASE)
+
+        return sanitized
