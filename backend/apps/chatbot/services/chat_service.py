@@ -599,6 +599,11 @@ class ChatService:
             trusted_answer = self._trusted_knowledge_answer(top_documents)
 
             if trusted_answer:
+                import re
+                if language in ("hi", "hinglish") and re.search(r'[a-zA-Z]{2,}', trusted_answer):
+                    translated = self.generator._translate_to_target_language(trusted_answer, language)
+                    if translated:
+                        trusted_answer = translated
 
                 generation_result = {
                     "answer": trusted_answer,

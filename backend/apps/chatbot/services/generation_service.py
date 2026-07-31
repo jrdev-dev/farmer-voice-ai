@@ -356,6 +356,11 @@ class GenerationService:
         answer = self._clean_text(answer)
         if target_language in ("hi", "hinglish"):
             answer = self._sanitize_hindi_terminology(answer)
+            import re
+            if re.search(r'[a-zA-Z]{2,}', answer):
+                translated = self._translate_to_target_language(answer, target_language)
+                if translated:
+                    answer = translated
 
         if not answer:
 
@@ -676,6 +681,34 @@ class GenerationService:
         )
 
         print("=" * 80 + "\n")
+
+    def _translate_to_target_language(self, text: str, target_language: str) -> str:
+        """
+        Universal Neural Translator:
+        Dynamically translates any English/mixed text into pure, natural target language (e.g. Hindi)
+        using the Tri-Tier LLM engine without any hardcoded dictionary.
+        """
+        import re
+        if not text or not re.search(r'[a-zA-Z]{2,}', text):
+            return text
+
+        lang_name = (
+            "Hindi"
+            if target_language == "hi"
+            else ("Hinglish (Roman Hindi)" if target_language == "hinglish" else target_language)
+        )
+        prompt = (
+            f"Translate the following agricultural answer into clear, natural {lang_name} for an Indian farmer. "
+            f"Do not explain or add extra notes. Return ONLY the direct translation:\n\nText: {text}"
+        )
+        try:
+            translated = self.llm.generate(prompt)
+            if translated:
+                translated = self._clean_text(translated)
+                return translated
+        except Exception as exc:
+            print(f"Universal Translation fallback skipped: {exc}")
+        return text
 
     @staticmethod
     def _sanitize_hindi_terminology(text: str) -> str:
