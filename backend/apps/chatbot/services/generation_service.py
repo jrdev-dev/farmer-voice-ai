@@ -59,6 +59,7 @@ class GenerationService:
         question,
         retrieved_documents,
         conversation_context="",
+        target_language="hi",
     ) -> Dict[str, Any]:
 
         question = self._clean_text(question)
@@ -353,7 +354,8 @@ class GenerationService:
         # =====================================================
 
         answer = self._clean_text(answer)
-        answer = self._sanitize_hindi_terminology(answer)
+        if target_language in ("hi", "hinglish"):
+            answer = self._sanitize_hindi_terminology(answer)
 
         if not answer:
 

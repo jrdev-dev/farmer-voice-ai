@@ -580,6 +580,7 @@ class ChatService:
                 question=original_question,
                 retrieved_documents=top_documents,
                 conversation_context=enriched_question,
+                target_language=language,
             )
 
         except Exception as exc:
@@ -1230,7 +1231,11 @@ class ChatService:
 
         detected = self._clean_text(detected).lower()
 
-        selected = requested or detected or "hi"
+        selected = (
+            detected
+            if detected in ("en", "hinglish", "gu", "mr", "pa", "ta", "te")
+            else (requested or detected or "hi")
+        )
 
         return self._normalize_language(selected)
 
