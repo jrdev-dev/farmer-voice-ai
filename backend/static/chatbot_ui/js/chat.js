@@ -903,31 +903,19 @@ function appendAssistantMessage(result) {
         result?.confidence_label;
 
 
-    if (
-        !isGreeting &&
+    const isLowConfidence =
         confidence !== undefined &&
-        confidence !== null
-    ) {
+        confidence !== null &&
+        (confidence < 50 || confidenceLabel === "very_low" || confidenceLabel === "low");
 
-        const confidenceElement =
-            document.createElement(
-                "span"
-            );
-
-
-        confidenceElement.className =
-            "confidence-badge";
-
-
-        confidenceElement.textContent =
-            confidenceLabel
-                ? `Confidence: ${confidence}% (${confidenceLabel})`
-                : `Confidence: ${confidence}%`;
-
-
-        metadata.appendChild(
-            confidenceElement
-        );
+    if (!isGreeting && isLowConfidence) {
+        const warningElement =
+            document.createElement("span");
+        warningElement.className =
+            "confidence-badge low-confidence-notice";
+        warningElement.textContent =
+            "⚠️ सलाह: सटीक जानकारी के लिए कृषि विज्ञान केंद्र (KVK) से संपर्क करें।";
+        metadata.appendChild(warningElement);
     }
 
 

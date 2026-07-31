@@ -964,6 +964,12 @@ a {
     border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
+.low-confidence-notice {
+    background: rgba(245, 158, 11, 0.12) !important;
+    color: #b45309 !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
 .language-badge {
     display: inline-flex;
     align-items: center;
