@@ -978,6 +978,7 @@ a {
     text-transform: uppercase;
 }
 
-.message-sources {
+.message-sources,
+.feedback-controls {
     display: none !important;
 }
