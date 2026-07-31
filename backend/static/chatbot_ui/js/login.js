@@ -421,6 +421,104 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // ========================================================
+    // REGISTER FORM SUBMISSION
+    // ========================================================
+
+    const registerForm = document.getElementById("registerForm");
+    const regNameInput = document.getElementById("regName");
+    const regEmailInput = document.getElementById("regEmail");
+    const regPasswordInput = document.getElementById("regPassword");
+    const regLanguageInput = document.getElementById("regLanguage");
+    const regSubmitBtn = document.getElementById("registerSubmitBtn");
+    const toggleRegPassword = document.getElementById("toggleRegPassword");
+
+    if (toggleRegPassword && regPasswordInput) {
+        toggleRegPassword.addEventListener("click", (e) => {
+            e.preventDefault();
+            const isPassword = regPasswordInput.type === "password";
+            regPasswordInput.type = isPassword ? "text" : "password";
+            toggleRegPassword.textContent = isPassword ? "🙈" : "👁️";
+        });
+    }
+
+    if (registerForm) {
+        registerForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const name = regNameInput?.value?.trim() || "";
+            const email = regEmailInput?.value?.trim() || "";
+            const password = regPasswordInput?.value || "";
+            const preferred_language = regLanguageInput?.value || "hi";
+
+            if (!name || !email || !password) {
+                showMessage("Please fill out all required registration fields.", "error");
+                return;
+            }
+
+            const nameParts = name.split(" ");
+            const first_name = nameParts[0] || name;
+            const last_name = nameParts.slice(1).join(" ") || "";
+
+            try {
+                if (regSubmitBtn) regSubmitBtn.disabled = true;
+                showMessage("Creating your account...", "info");
+
+                const response = await fetch("/api/accounts/register/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email,
+                        first_name,
+                        last_name,
+                        password,
+                        confirm_password: password,
+                        preferred_language,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    const err = result?.message || result?.detail || (result?.email ? result.email[0] : null) || (result?.password ? result.password[0] : null) || "Registration failed. Please try again.";
+                    throw new Error(err);
+                }
+
+                showMessage("Account created successfully! Logging you in...", "success");
+
+                // Auto login after registration
+                const loginResponse = await fetch("/api/accounts/login/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const loginResult = await loginResponse.json();
+                const tokenData = loginResult?.data || loginResult;
+
+                if (tokenData?.access) {
+                    localStorage.setItem(ACCESS_TOKEN_KEY, tokenData.access);
+                    if (tokenData.refresh) localStorage.setItem(REFRESH_TOKEN_KEY, tokenData.refresh);
+                    if (tokenData.user) localStorage.setItem(USER_KEY, JSON.stringify(tokenData.user));
+                    window.location.replace("/chat/");
+                } else {
+                    window.location.replace("/");
+                }
+            } catch (error) {
+                console.error("Registration error:", error);
+                showMessage(error.message || "Registration failed.", "error");
+            } finally {
+                if (regSubmitBtn) regSubmitBtn.disabled = false;
+            }
+        });
+    }
+
+
+    // ========================================================
     // GET ERROR MESSAGE
     // ========================================================
 

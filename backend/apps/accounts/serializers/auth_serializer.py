@@ -73,7 +73,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         password = attrs.get("password")
 
-        confirm_password = attrs.get("confirm_password")
+        confirm_password = attrs.get("confirm_password") or password
+        attrs["confirm_password"] = confirm_password
 
         # ----------------------------------------------------
         # Password confirmation
