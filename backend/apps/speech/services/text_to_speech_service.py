@@ -134,10 +134,26 @@ class TextToSpeechService:
     def get_voice(
         self,
         language,
+        text="",
     ):
         """
-        Select TTS voice according to language.
+        Select TTS voice according to language & script detection.
         """
+        import re
+
+        # Script-level voice override if text contains non-ASCII script
+        if text:
+            text_str = str(text)
+            if re.search(r'[\u0900-\u097F]', text_str):
+                return "hi-IN-SwaraNeural"
+            if re.search(r'[\u0A80-\u0AFF]', text_str):
+                return "gu-IN-DhwaniNeural"
+            if re.search(r'[\u0A00-\u0A7F]', text_str):
+                return "pa-IN-GurpreetNeural"
+            if re.search(r'[\u0B80-\u0BFF]', text_str):
+                return "ta-IN-PallaviNeural"
+            if re.search(r'[\u0C00-\u0C7F]', text_str):
+                return "te-IN-ShrutiNeural"
 
         normalized_language = self.normalize_language(language)
 
@@ -262,7 +278,7 @@ class TextToSpeechService:
 
         normalized_language = self.normalize_language(language)
 
-        voice = self.get_voice(normalized_language)
+        voice = self.get_voice(normalized_language, text=text)
 
         # -----------------------------------------------------
         # Generate Unique File

@@ -1,10 +1,5 @@
-import sys
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    except Exception:
-        pass
+import logging
+logger = logging.getLogger(__name__)
 
 from .memory_service import MemoryService
 from .context_builder import ContextBuilder
