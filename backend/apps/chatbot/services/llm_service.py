@@ -231,10 +231,8 @@ class LLMService:
     # =========================================================
 
     def _generate_gemini(self, prompt: str, api_key: str) -> Optional[str]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-
+        models_to_try = ["gemini-2.0-flash", "gemini-flash-latest", "gemini-1.5-flash-latest"]
         headers = {"Content-Type": "application/json"}
-
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
@@ -243,47 +241,30 @@ class LLMService:
             },
         }
 
-        try:
-            response = requests.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=8,
-            )
-
-            if response.status_code == 200:
-
-                data = response.json()
-
-                candidates = data.get("candidates", [])
-
-                if candidates:
-
-                    parts = candidates[0].get("content", {}).get("parts", [])
-
-                    if parts:
-
-                        content = parts[0].get("text", "").strip()
-
-                        if content:
-
-                            return content
-
-            elif response.status_code == 429:
-
-                print("⚠️ Gemini API Rate/Quota Limit Exceeded (HTTP 429) -> Auto-switching to Ollama CPU...")
-
-            elif response.status_code in (401, 403):
-
-                print("⚠️ Gemini API Key Expired/Invalid (HTTP 401/403) -> Auto-switching to Ollama CPU...")
-
-            else:
-
-                print(f"⚠️ Gemini API HTTP {response.status_code} -> Auto-switching to Ollama CPU...")
-
-        except Exception as exc:
-
-            print(f"⚠️ Gemini API Network Error: {exc} -> Auto-switching to Ollama CPU...")
+        for model_name in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+            try:
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    json=payload,
+                    timeout=8,
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts:
+                            content = parts[0].get("text", "").strip()
+                            if content:
+                                return content
+                elif response.status_code == 429:
+                    print(f"⚠️ Gemini API Rate Limit Exceeded on {model_name} (HTTP 429)")
+                else:
+                    print(f"⚠️ Gemini API model {model_name} returned HTTP {response.status_code}")
+            except Exception as exc:
+                print(f"⚠️ Gemini API network error for {model_name}: {exc}")
 
         return None
 
