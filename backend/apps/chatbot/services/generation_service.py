@@ -123,6 +123,7 @@ class GenerationService:
                 question=question,
                 retrieved_documents=(retrieved_documents),
                 conversation_context=(conversation_context),
+                target_language=target_language,
             )
 
         except Exception as exc:

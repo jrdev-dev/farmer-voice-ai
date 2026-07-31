@@ -181,7 +181,7 @@ class LLMService:
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.05,
-            "max_tokens": 300,
+            "max_tokens": 500,
         }
 
         try:
@@ -239,7 +239,7 @@ class LLMService:
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": 0.05,
-                "maxOutputTokens": 300,
+                "maxOutputTokens": 500,
             },
         }
 

@@ -375,9 +375,10 @@ class PromptBuilder:
         question,
         retrieved_documents,
         conversation_context="",
+        target_language="hi",
     ):
         """
-        Build final grounded RAG prompt optimized for speed and grounding accuracy.
+        Build final grounded RAG prompt optimized for speed, cross-lingual accuracy, and grounding.
         """
         farmer_question = self._limit(question, 400)
 
@@ -391,16 +392,30 @@ class PromptBuilder:
         if not conversation_context:
             conversation_context = "None"
 
-        prompt = f"""You are Krishi AI, an evidence-grounded agricultural assistant for Indian farmers.
-Answer the farmer's question using the provided TRUSTED KNOWLEDGE.
+        language_names = {
+            "hi": "Hindi (Devanagari)",
+            "hinglish": "Hinglish (Roman Hindi)",
+            "en": "English",
+            "gu": "Gujarati",
+            "mr": "Marathi",
+            "pa": "Punjabi",
+            "ta": "Tamil",
+            "te": "Telugu",
+        }
+        lang_display = language_names.get(str(target_language).lower(), "Hindi (Devanagari)")
+
+        prompt = f"""You are Krishi AI, an evidence-grounded agricultural expert for Indian farmers.
+Answer the farmer's question accurately using ONLY the provided TRUSTED KNOWLEDGE.
 
 RULES:
 1. Base your answer strictly on the provided TRUSTED KNOWLEDGE.
 2. Match farmer spelling/phonetic variations appropriately (e.g., गेहु/गेहूं, सचाई/सिंचाई, soyabin/soybean, pili ptti/yellow leaf).
 3. Do NOT invent chemical names, fertilizer names, pesticide names, or exact dosages not present in the knowledge.
-4. Reply clearly and concisely in the farmer's language.
+4. TARGET LANGUAGE REQUIREMENT:
+   The answer MUST be delivered 100% in {lang_display}.
+   Translate all knowledge details, crop names, soil types, district names, and agricultural practices naturally into {lang_display}.
+   Never output half-English half-Hindi text or untranslated English jargon.
 5. If trusted knowledge is completely insufficient or absent, reply: "मुझे उपलब्ध कृषि ज्ञान में इसका उत्तर नहीं मिला। कृपया कृषि विशेषज्ञ से संपर्क करें।"
-6. If the FARMER QUESTION is in Hindi or Hinglish, express the retrieved knowledge completely in clear, natural Devanagari Hindi. Translate all English crop, soil, and location names (e.g. paddy -> धान, wheat -> गेहूं, jute -> जूट/पटसन). Never output half-English half-Hindi text.
 
 CONVERSATION CONTEXT:
 {conversation_context}
@@ -408,8 +423,8 @@ CONVERSATION CONTEXT:
 TRUSTED KNOWLEDGE:
 {knowledge_context}
 
-FARMER QUESTION:
+FARMER QUESTION ({lang_display}):
 {farmer_question}
 
-ANSWER:"""
+ANSWER ({lang_display}):"""
         return prompt.strip()
