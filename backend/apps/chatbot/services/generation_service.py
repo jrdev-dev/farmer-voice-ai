@@ -685,21 +685,30 @@ class GenerationService:
     def _translate_to_target_language(self, text: str, target_language: str) -> str:
         """
         Universal Neural Translator:
-        Dynamically translates any English/mixed text into pure, natural target language (e.g. Hindi)
-        using the Tri-Tier LLM engine without any hardcoded dictionary.
+        Dynamically translates any text into target_language (e.g. English for search, or Hindi for answer delivery)
+        using the Tri-Tier LLM engine without any hardcoded rules.
         """
+        if not text or not str(text).strip():
+            return text
+
         import re
-        if not text or not re.search(r'[a-zA-Z]{2,}', text):
+
+        # If translating to Hindi/Hinglish and there are no English words, it's already in Hindi
+        if target_language in ("hi", "hinglish") and not re.search(r'[a-zA-Z]{2,}', text):
+            return text
+
+        # If translating to English and text is already pure ASCII/English, no translation needed
+        if target_language == "en" and not re.search(r'[^\x00-\x7F]', text):
             return text
 
         lang_name = (
             "Hindi"
             if target_language == "hi"
-            else ("Hinglish (Roman Hindi)" if target_language == "hinglish" else target_language)
+            else ("Hinglish (Roman Hindi)" if target_language == "hinglish" else ("English" if target_language == "en" else target_language))
         )
         prompt = (
-            f"Translate the following agricultural answer into clear, natural {lang_name} for an Indian farmer. "
-            f"Do not explain or add extra notes. Return ONLY the direct translation:\n\nText: {text}"
+            f"Translate the following text accurately into {lang_name}. "
+            f"Do not explain, add notes, or add markdown formatting. Return ONLY the direct translation:\n\nText: {text}"
         )
         try:
             translated = self.llm.generate(prompt)
@@ -707,7 +716,7 @@ class GenerationService:
                 translated = self._clean_text(translated)
                 return translated
         except Exception as exc:
-            print(f"Universal Translation fallback skipped: {exc}")
+            print(f"Universal Translation error: {exc}")
         return text
 
     @staticmethod
