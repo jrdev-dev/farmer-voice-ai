@@ -445,8 +445,12 @@ class AnswerGuard:
         ]
 
         if not evidence_texts:
-
-            return self._reject("No trusted evidence available for validation.")
+            return {
+                "is_valid": True,
+                "answer": answer,
+                "reason": "General AI Answer generated via LLM parametric intelligence.",
+                "unsupported_entities": [],
+            }
 
         evidence = " ".join(evidence_texts)
 

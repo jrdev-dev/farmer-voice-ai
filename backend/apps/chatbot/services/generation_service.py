@@ -74,44 +74,10 @@ class GenerationService:
         )
 
         # =====================================================
-        # 1. No Trusted Evidence
+        # 1. Collect Trusted Evidence (Optional for Hybrid RAG)
         # =====================================================
 
-        if not retrieved_documents:
-
-            return self._build_result(
-                answer=self.SAFE_FALLBACK_HI,
-                raw_answer="",
-                answer_valid=False,
-                guard_reason=("No trusted evidence documents were provided."),
-                fallback_used=True,
-                fallback_source="safe_fallback",
-                prompt="",
-                evidence_count=0,
-                generation_error=None,
-            )
-
-        # =====================================================
-        # 2. Collect Trusted Evidence
-        # =====================================================
-
-        evidence_texts = self._collect_evidence(retrieved_documents)
-
-        if not evidence_texts:
-
-            return self._build_result(
-                answer=self.SAFE_FALLBACK_HI,
-                raw_answer="",
-                answer_valid=False,
-                guard_reason=(
-                    "Retrieved documents contained no usable " "trusted evidence."
-                ),
-                fallback_used=True,
-                fallback_source="safe_fallback",
-                prompt="",
-                evidence_count=0,
-                generation_error=None,
-            )
+        evidence_texts = self._collect_evidence(retrieved_documents) if retrieved_documents else []
 
         # =====================================================
         # 3. Build Grounded Prompt

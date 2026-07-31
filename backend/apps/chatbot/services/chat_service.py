@@ -373,212 +373,26 @@ class ChatService:
             )
 
         # =====================================================
-        # 10. No Retrieval Results
+        # 10. Process Retrieval Results (Database vs AI Knowledge)
         # =====================================================
 
-        if not ranked_results:
+        top_documents = []
+        relevance_result = {"is_relevant": False, "reason": "General AI parametric knowledge used."}
 
-            print("\n" + "=" * 80)
-            print("RETRIEVAL FAILED")
-            print("=" * 80)
-
-            print(
-                "Question :",
-                enriched_question,
-            )
-
-            print("Reason   : No retrieval results")
-
-            print("LLM      : SKIPPED")
-
-            print("=" * 80 + "\n")
-
-            return self._knowledge_failure(
-                conversation=conversation,
-                language=language,
-                intent=intent_type,
-                match_type="none",
-                reason="No retrieval results.",
-            )
-
-        # =====================================================
-        # 11. Validate Best Candidate
-        # =====================================================
-
-        best = ranked_results[0]
-
-        if not isinstance(
-            best,
-            dict,
-        ):
-
-            return self._knowledge_failure(
-                conversation=conversation,
-                language=language,
-                intent=intent_type,
-                match_type="none",
-                reason="Invalid retrieval result.",
-            )
-
-        knowledge = best.get("knowledge")
-
-        if knowledge is None:
-
-            return self._knowledge_failure(
-                conversation=conversation,
-                language=language,
-                intent=intent_type,
-                match_type="none",
-                reason=("Retrieval result contains " "no knowledge."),
-            )
-
-        # =====================================================
-        # 12. Relevance Guard
-        # =====================================================
-
-        try:
-
-            relevance_result = self.relevance.evaluate(
-                best_result=best,
-                question=enriched_question,
-            )
-
-        except TypeError:
-
-            # Compatibility with older
-            # RelevanceService signature.
-
-            try:
-
-                relevance_result = self.relevance.evaluate(best_result=best)
-
-            except Exception as exc:
-
-                self._debug_error(
-                    "RELEVANCE ERROR",
-                    exc,
-                )
-
-                return self._knowledge_failure(
-                    conversation=conversation,
-                    language=language,
-                    intent=intent_type,
-                    match_type="irrelevant",
-                    reason=("Relevance validation failed."),
-                )
-
-        except Exception as exc:
-
-            self._debug_error(
-                "RELEVANCE ERROR",
-                exc,
-            )
-
-            return self._knowledge_failure(
-                conversation=conversation,
-                language=language,
-                intent=intent_type,
-                match_type="irrelevant",
-                reason=("Relevance validation failed."),
-            )
-
-        if not isinstance(
-            relevance_result,
-            dict,
-        ):
-
-            relevance_result = {
-                "is_relevant": False,
-                "reason": ("Invalid relevance result."),
-            }
-
-        self._debug_relevance(
-            knowledge,
-            enriched_question,
-            relevance_result,
-        )
-
-        # =====================================================
-        # 13. Block Irrelevant Retrieval
-        # =====================================================
-
-        if not relevance_result.get(
-            "is_relevant",
-            False,
-        ):
-
-            print("\n" + "=" * 80)
-            print("RAG GENERATION BLOCKED")
-            print("=" * 80)
-
-            print(
-                "Original Question :",
-                original_question,
-            )
-
-            print(
-                "Context Question  :",
-                enriched_question,
-            )
-
-            print(
-                "Knowledge Crop    :",
-                getattr(
-                    knowledge,
-                    "crop",
-                    "",
-                ),
-            )
-
-            print(
-                "Reason            :",
-                relevance_result.get(
-                    "reason",
-                    "",
-                ),
-            )
-
-            print("LLM               : SKIPPED")
-
-            print("=" * 80 + "\n")
-
-            return self._knowledge_failure(
-                conversation=conversation,
-                language=language,
-                intent=intent_type,
-                match_type="irrelevant",
-                reason=relevance_result.get(
-                    "reason",
-                    "Insufficient relevance.",
-                ),
-            )
-
-        # =====================================================
-        # 14. Evidence Selection
-        # =====================================================
-
-        try:
-
-            top_documents = self.evidence_selector.select(ranked_results)
-
-        except Exception as exc:
-
-            self._debug_error(
-                "EVIDENCE SELECTION ERROR",
-                exc,
-            )
-
-            top_documents = []
-
-        if not top_documents:
-
-            return self._knowledge_failure(
-                conversation=conversation,
-                language=language,
-                intent=intent_type,
-                match_type="irrelevant",
-                reason=("No trustworthy supporting evidence."),
-            )
+        if ranked_results:
+            best = ranked_results[0]
+            if isinstance(best, dict) and best.get("knowledge") is not None:
+                try:
+                    eval_res = self.relevance.evaluate(
+                        best_result=best,
+                        question=enriched_question,
+                    )
+                    if isinstance(eval_res, dict):
+                        relevance_result = eval_res
+                        if eval_res.get("is_relevant", False):
+                            top_documents = self.evidence_selector.select(ranked_results)
+                except Exception as exc:
+                    self._debug_error("RELEVANCE EVALUATION ERROR", exc)
 
         self._debug_evidence(top_documents)
 

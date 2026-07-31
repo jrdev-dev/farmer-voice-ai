@@ -415,7 +415,7 @@ RULES:
    The answer MUST be delivered 100% in {lang_display}.
    Translate all knowledge details, crop names, soil types, district names, and agricultural practices naturally into {lang_display}.
    Never output half-English half-Hindi text or untranslated English jargon.
-5. If trusted knowledge is completely insufficient or absent, reply: "मुझे उपलब्ध कृषि ज्ञान में इसका उत्तर नहीं मिला। कृपया कृषि विशेषज्ञ से संपर्क करें।"
+5. If trusted knowledge is absent or empty, use your general AI parametric knowledge to answer the question directly, accurately, and completely in {lang_display}.
 
 CONVERSATION CONTEXT:
 {conversation_context}

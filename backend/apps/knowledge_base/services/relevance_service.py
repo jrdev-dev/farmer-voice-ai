@@ -200,8 +200,28 @@ class RelevanceService:
             )
 
         # =====================================================
-        # 3. Independent Evidence
+        # 2.5 Topic Intent Safety Check
         # =====================================================
+
+        best_knowledge = best_result.get("knowledge")
+        q_lower = str(question).lower()
+        doc_q = str(getattr(best_knowledge, "question", "")).lower()
+
+        sowing_terms = {"bou", "boae", "sowing", "seeding", "बुआई", "बोएं", "बोएँ"}
+        irrigation_terms = {"irrigation", "water", "सिंचाई", "पानी"}
+
+        if any(t in q_lower for t in sowing_terms) and any(t in doc_q for t in irrigation_terms) and not any(t in doc_q for t in sowing_terms):
+            return self._response(
+                is_relevant=False,
+                reason="Topic mismatch: Query asked for sowing/seeding but document is about irrigation.",
+                evidence=[],
+                keyword_raw=keyword_raw,
+                bm25_raw=bm25_raw,
+                fuzzy_raw=fuzzy_raw,
+                semantic_raw=semantic_raw,
+                question_raw=question_raw,
+                crop_validation={},
+            )
 
         evidence = []
 

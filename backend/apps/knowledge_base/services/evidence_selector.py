@@ -116,6 +116,10 @@ class EvidenceSelector:
             )
         )
 
+        # Minimum relevance threshold for trusted DB evidence
+        if best_score < 0.45:
+            return []
+
         best_knowledge = best.get("knowledge")
 
         best_crop = self._normalize_text(
