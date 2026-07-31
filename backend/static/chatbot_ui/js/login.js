@@ -12,29 +12,25 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("loginForm");
 
     const emailInput =
-        document.getElementById("email");
+        document.getElementById("loginEmail") || document.getElementById("email");
 
     const passwordInput =
-        document.getElementById("password");
+        document.getElementById("loginPassword") || document.getElementById("password");
 
     const loginButton =
-        document.getElementById("loginButton");
+        document.getElementById("loginSubmitBtn") || document.getElementById("loginButton");
 
     const loginButtonText =
-        document.getElementById("loginButtonText");
+        document.querySelector("#loginSubmitBtn .btn-label") || document.getElementById("loginButtonText");
 
     const loginLoader =
-        document.getElementById("loginLoader");
+        document.querySelector("#loginSubmitBtn .btn-spinner") || document.getElementById("loginLoader");
 
     const loginMessage =
-        document.getElementById("loginMessage");
-
-    // IMPORTANT:
-    // This matches login.html:
-    // id="togglePassword"
+        document.getElementById("authMessage") || document.getElementById("loginMessage");
 
     const passwordToggle =
-        document.getElementById("togglePassword");
+        document.getElementById("toggleLoginPassword") || document.getElementById("togglePassword");
 
 
     // ========================================================
@@ -605,30 +601,16 @@ document.addEventListener("DOMContentLoaded", () => {
         message,
         type = "info"
     ) {
-
-        if (!loginMessage) {
+        let msgEl = loginMessage || document.getElementById("authMessage") || document.getElementById("loginMessage");
+        if (!msgEl) {
             return;
         }
 
-
-        loginMessage.textContent =
-            message;
-
-
-        loginMessage.classList.remove(
-            "success",
-            "error",
-            "info"
-        );
-
-
-        loginMessage.classList.add(
-            type
-        );
-
-
-        loginMessage.hidden =
-            false;
+        msgEl.textContent = message;
+        msgEl.classList.remove("success", "error", "info");
+        msgEl.classList.add(type);
+        msgEl.removeAttribute("hidden");
+        msgEl.style.display = "block";
     }
 
 
