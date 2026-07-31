@@ -485,28 +485,33 @@ document.addEventListener("DOMContentLoaded", () => {
                     throw new Error(err);
                 }
 
-                showMessage("Account created successfully! Logging you in...", "success");
-
-                // Auto login after registration
-                const loginResponse = await fetch("/api/accounts/login/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                    },
-                    body: JSON.stringify({ email, password }),
-                });
-
-                const loginResult = await loginResponse.json();
-                const tokenData = loginResult?.data || loginResult;
+                const tokenData = result?.data || result;
 
                 if (tokenData?.access) {
                     localStorage.setItem(ACCESS_TOKEN_KEY, tokenData.access);
                     if (tokenData.refresh) localStorage.setItem(REFRESH_TOKEN_KEY, tokenData.refresh);
                     if (tokenData.user) localStorage.setItem(USER_KEY, JSON.stringify(tokenData.user));
+                    showMessage("Account created! Redirecting to assistant...", "success");
                     window.location.replace("/chat/");
                 } else {
-                    window.location.replace("/");
+                    // Fallback to explicit login call
+                    const loginResponse = await fetch("/api/accounts/login/", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                        },
+                        body: JSON.stringify({ email, password }),
+                    });
+                    const loginResult = await loginResponse.json();
+                    const loginTokenData = loginResult?.data || loginResult;
+
+                    if (loginTokenData?.access) {
+                        localStorage.setItem(ACCESS_TOKEN_KEY, loginTokenData.access);
+                        if (loginTokenData.refresh) localStorage.setItem(REFRESH_TOKEN_KEY, loginTokenData.refresh);
+                        if (loginTokenData.user) localStorage.setItem(USER_KEY, JSON.stringify(loginTokenData.user));
+                    }
+                    window.location.replace("/chat/");
                 }
             } catch (error) {
                 console.error("Registration error:", error);

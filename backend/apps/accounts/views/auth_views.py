@@ -43,18 +43,13 @@ class RegisterAPIView(CreateAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
+        token_data = AuthService.login_user(user)
 
         return Response(
             {
                 "success": True,
                 "message": "User registered successfully.",
-                "data": {
-                    "id": user.id,
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "role": user.role,
-                },
+                "data": token_data,
             },
             status=status.HTTP_201_CREATED,
         )
