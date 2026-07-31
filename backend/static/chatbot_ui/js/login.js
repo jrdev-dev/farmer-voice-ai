@@ -118,24 +118,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // ========================================================
     // FORM CHECK
     // ========================================================
-
-    if (!loginForm) {
-
-        console.error(
-            "Farmer Voice AI: loginForm was not found."
-        );
-
-        return;
-    }
-
-
-    // ========================================================
     // LOGIN SUBMIT
     // ========================================================
 
-    loginForm.addEventListener(
-        "submit",
-        async (event) => {
+    if (loginForm) {
+        loginForm.addEventListener(
+            "submit",
+            async (event) => {
 
             event.preventDefault();
 
@@ -412,8 +401,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 setLoading(false);
             }
 
-        }
-    );
+        });
+    }
 
 
     // ========================================================
