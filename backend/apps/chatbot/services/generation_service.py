@@ -764,6 +764,16 @@ class GenerationService:
             (r"organic\s+manure", "जैविक खाद"),
             (r"vermicompost", "वर्मीकंपोस्ट"),
             (r"harvesting\s+time", "कटाई का समय"),
+
+            # Common Crop Names
+            (r"\bpaddy\b", "धान"),
+            (r"\bwheat\b", "गेहूं"),
+            (r"\bjute\b", "पटसन (जूट)"),
+            (r"\bcotton\b", "कपास"),
+            (r"\bmustard\b", "सरसों"),
+            (r"\bsoybean\b", "सोयाबीन"),
+            (r"\bpotato\b", "आलू"),
+            (r"\bsugarcane\b", "गन्ना"),
         ]
 
         sanitized = text

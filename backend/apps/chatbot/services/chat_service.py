@@ -335,15 +335,32 @@ class ChatService:
         )
 
         # =====================================================
-        # 9. Hybrid Retrieval
+        # 9. Hybrid Retrieval with Cross-Lingual Alignment
         # =====================================================
+
+        search_query = enriched_question
+        import re
+        if language in ("hi", "hinglish", "gu", "mr", "pa", "ta", "te") and re.search(r'[^\x00-\x7F]', enriched_question):
+            try:
+                translated_query = self.generator._translate_to_target_language(enriched_question, "en")
+                if translated_query and len(translated_query) > 3:
+                    search_query = translated_query
+            except Exception as exc:
+                print(f"Cross-lingual query translation skipped: {exc}")
 
         try:
 
             ranked_results = self.retriever.retrieve(
-                question=enriched_question,
+                question=search_query,
                 language=language,
             )
+
+            # Fallback to original enriched_question if cross-lingual query returned no results
+            if not ranked_results and search_query != enriched_question:
+                ranked_results = self.retriever.retrieve(
+                    question=enriched_question,
+                    language=language,
+                )
 
         except Exception as exc:
 
