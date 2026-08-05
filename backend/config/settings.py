@@ -19,6 +19,12 @@ load_dotenv(BASE_DIR / ".env")
 
 
 # =============================================================================
+# API KEYS
+# =============================================================================
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
+# =============================================================================
 # SECURITY
 # =============================================================================
 
@@ -39,7 +45,18 @@ DEBUG = os.environ.get(
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+    "192.168.31.120",
+    "*",
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.loca.lt",
+    "https://*.lhr.life",
+]
+
+# Tell Django it's behind a proxy that terminates SSL (like localtunnel/ngrok)
+# This fixes the "Mixed Content" HTTP vs HTTPS issues when returning absolute URLs.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # =============================================================================
@@ -83,6 +100,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",

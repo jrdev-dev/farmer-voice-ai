@@ -135,6 +135,24 @@ class LanguageService:
         "batao",
         "bataye",
         "bachaye",
+        "btao",
+        "kb",
+        "bou",
+        "aalu",
+        "alu",
+        "m",
+        "me",
+        "pe",
+        "kr",
+        "kar",
+        "karo",
+        "raha",
+        "rhi",
+        "rha",
+        "ho",
+        "hu",
+        "hoon",
+        "hun",
         # Greetings
         "namaste",
         "namaskar",
@@ -244,6 +262,11 @@ class LanguageService:
         text = self._normalize(text)
 
         if not text:
+            return "hi"
+
+        # Explicit language request check (e.g. "hindi m btao", "in hindi")
+        lower_text = text.lower()
+        if re.search(r"\b(hindi|hindhi|hinglish)\b", lower_text) or re.search(r"हिंदी|हिन्दी", text):
             return "hi"
 
         # =====================================================

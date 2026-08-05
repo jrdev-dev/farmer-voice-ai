@@ -319,9 +319,11 @@ class RetrieverService:
             ).strip()
 
             if query_crop and knowledge_crop:
+                detected_crops = crop_info.get("crops") if isinstance(crop_info, dict) else None
+                crop_target = detected_crops if detected_crops else query_crop
 
                 if not self._crop_matches(
-                    query_crop,
+                    crop_target,
                     knowledge_crop,
                 ):
 
@@ -722,23 +724,21 @@ class RetrieverService:
         knowledge_crop,
     ) -> bool:
 
-        query_crop = self._normalize_crop(
-            query_crop
-        )
+        if isinstance(query_crop, (list, tuple, set)):
+            return any(self._crop_matches(q, knowledge_crop) for q in query_crop)
 
-        knowledge_crop = self._normalize_crop(
-            knowledge_crop
-        )
+        query_crop_norm = self._normalize_crop(query_crop)
+        knowledge_crop_norm = self._normalize_crop(knowledge_crop)
 
-        if not query_crop or not knowledge_crop:
+        if not query_crop_norm or not knowledge_crop_norm:
             return False
 
-        if query_crop == knowledge_crop:
+        if query_crop_norm == knowledge_crop_norm:
             return True
 
         return (
-            query_crop in knowledge_crop
-            or knowledge_crop in query_crop
+            query_crop_norm in knowledge_crop_norm
+            or knowledge_crop_norm in query_crop_norm
         )
 
     # =========================================================

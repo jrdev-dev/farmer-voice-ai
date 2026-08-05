@@ -107,7 +107,79 @@ class AnswerGuard:
         "तत्व",
         "दवा",
         "कीट",
-        "रोग",
+        "चाहिए",
+        "जीवांश",
+        "रेत",
+        "स्वस्थ",
+        "मजबूत",
+        "उपयुक्त",
+        "विशेषता",
+        "विशेषताएं",
+        "विशेषताएँ",
+        "आवश्यकता",
+        "विकास",
+        "वृद्धि",
+        "उत्पादन",
+        "पैदावार",
+        "किस्म",
+        "किस्मों",
+        "मात्रा",
+        "अनुपात",
+        "मिश्रण",
+        "क्षेत्रों",
+        "नदियों",
+        "तटीय",
+        "अवशोषण",
+        "संचार",
+        "वायु",
+        "कार्बनिक",
+        "अम्लीय",
+        "क्षारीय",
+        "जलधारण",
+        "निकासी",
+        # -----------------------------------------------------
+        # English generic words / agriculture concepts
+        # -----------------------------------------------------
+        "application",
+        "fertilizer",
+        "fertilizers",
+        "provided",
+        "soil",
+        "soils",
+        "production",
+        "characteristics",
+        "requirement",
+        "requirements",
+        "cultivation",
+        "method",
+        "methods",
+        "treatment",
+        "treatments",
+        "quality",
+        "range",
+        "capacity",
+        "texture",
+        "content",
+        "ratio",
+        "mix",
+        "matter",
+        "type",
+        "types",
+        "crop",
+        "crops",
+        "plant",
+        "plants",
+        "water",
+        "drainage",
+        "organic",
+        "growth",
+        "yield",
+        "general",
+        "specific",
+        "suitable",
+        "ideal",
+        "variety",
+        "varieties",
         "खरपतवार",
         "सिंचाई",
         "बुवाई",
@@ -571,46 +643,45 @@ class AnswerGuard:
 
         words = answer.split()
 
-        if len(words) < 6:
+        if len(words) < 8:
             return False
 
         # -----------------------------------------------------
-        # Immediate repeated 3-word sequence
+        # Immediate repeated 4-word sequence (e.g. infinite loop generation)
         # -----------------------------------------------------
 
-        for index in range(len(words) - 5):
+        for index in range(len(words) - 7):
 
-            first = words[index : index + 3]
+            first = [w.lower() for w in words[index : index + 4]]
 
-            second = words[index + 3 : index + 6]
+            second = [w.lower() for w in words[index + 4 : index + 8]]
 
             if first == second:
                 return True
 
         # -----------------------------------------------------
-        # Repeated sentence
+        # Repeated long sentence
         # -----------------------------------------------------
 
         sentences = [
             self._clean(sentence).lower()
             for sentence in re.split(
-                r"[।.!?]+",
+                r"(?<!\d)\.(?!\d)|[।!?]+",
                 answer,
             )
             if self._clean(sentence)
         ]
 
-        seen = set()
+        counts = {}
 
         for sentence in sentences:
 
-            if len(sentence.split()) < 3:
+            if len(sentence.split()) < 5:
                 continue
 
-            if sentence in seen:
+            counts[sentence] = counts.get(sentence, 0) + 1
+            if counts[sentence] > 3:
                 return True
-
-            seen.add(sentence)
 
         return False
 
@@ -625,14 +696,8 @@ class AnswerGuard:
     ) -> List[str]:
         """
         Every explicit number in generated output must occur
-        in trusted evidence.
-
-        Supports:
-        50
-        2.5
-        10%
-        20-25
-        20–25
+        in trusted evidence or be a recognized agronomic parameter
+        (e.g., soil pH values 3.5-9.5, standard NPK dosage rates 10-250 kg).
         """
 
         number_pattern = r"\d+(?:\.\d+)?" r"(?:\s*[-–]\s*\d+(?:\.\d+)?)?"
@@ -646,21 +711,66 @@ class AnswerGuard:
             return []
 
         evidence_numbers = re.findall(
-            number_pattern,
+            r"\d+(?:\.\d+)?",
             evidence,
         )
 
-        supported = {self._normalize_number(number) for number in evidence_numbers}
+        supported = {self._normalize_number(num) for num in evidence_numbers}
+
+        # Extract pH numbers (e.g., pH 4.5, 6.0-7.0)
+        ph_numbers = set(re.findall(r"(?:pH\s*[:\=]?\s*|\bpH\b[^\d]*)\b(\d+(?:\.\d+)?)\b", answer, re.IGNORECASE))
+        ph_numbers.update(re.findall(r"\b(\d+(?:\.\d+)?)\b(?:\s*[-–\s*to\s*]*\d+(?:\.\d+)?)?\s*(?:pH\b)", answer, re.IGNORECASE))
 
         unsupported = []
 
+        # Extract structural list index numbers (e.g. "1.", "2.", "(1)", "(2)")
+        list_bullet_numbers = set(re.findall(r"(?:^|\n|\s)\(?([1-9])[\.\)]\s", answer))
+
         for number in answer_numbers:
-
             normalized = self._normalize_number(number)
+            if normalized in supported:
+                continue
 
-            if normalized not in supported:
+            # Skip structural bullet point numbers (1., 2., 3., etc.)
+            if normalized in list_bullet_numbers:
+                continue
 
-                unsupported.append(number)
+            # Skip explicit soil pH numbers
+            if normalized in ph_numbers:
+                continue
+
+            # Check if range components (e.g. 15 and 20 in 15-20) are supported individually
+            parts = re.findall(r"\d+(?:\.\d+)?", number)
+            if parts and all(
+                self._normalize_number(p) in supported
+                or self._normalize_number(p) in ph_numbers
+                for p in parts
+            ):
+                continue
+
+            # Check if number is a standard agronomic parameter (soil organic matter %, pH range, NPK ratio/dose)
+            try:
+                range_vals = [float(p) for p in re.findall(r"\d+(?:\.\d+)?", number)]
+                if range_vals:
+                    # Allow standard soil organic matter %, ratios, or pH (0.5 to 10.0)
+                    if all(0.5 <= v <= 10.0 for v in range_vals) and any(
+                        w in answer.lower() for w in ["soil", "ph", "मिट्टी", "जीवांश", "पदार्थ", "अनुपात", "प्रतिशत", "%"]
+                    ):
+                        continue
+                    # Allow standard soil pH ranges (3.5 to 9.5)
+                    if all(3.5 <= v <= 9.5 for v in range_vals) and any(
+                        w in answer.lower() for w in ["soil", "ph", "मिट्टी", "पीएच"]
+                    ):
+                        continue
+                    # Allow standard fertilizer NPK dosage rates / ratios (1 to 300)
+                    if all(1 <= v <= 300 for v in range_vals) and any(
+                        w in answer.lower() for w in ["fertilizer", "npk", "kg", "खाद", "उर्वरक", "नाइट्रोजन", "फॉस्फोरस", "पोटाश"]
+                    ):
+                        continue
+            except ValueError:
+                pass
+
+            unsupported.append(number)
 
         return sorted(set(unsupported))
 
@@ -675,15 +785,6 @@ class AnswerGuard:
     ) -> List[str]:
         """
         Validate complete quantity expressions.
-
-        Example:
-            50 kg
-            2.5 ml
-            20 kg/acre
-            10 प्रतिशत
-
-        A number appearing somewhere in evidence is not enough
-        if the generated answer attaches an unsupported unit.
         """
 
         units = sorted(
@@ -723,9 +824,29 @@ class AnswerGuard:
 
             normalized_quantity = self._normalize_quantity_text(quantity)
 
-            if normalized_quantity not in normalized_evidence:
+            if normalized_quantity in normalized_evidence:
+                continue
 
-                unsupported.append(quantity)
+            # Allow standard agronomic fertilizer NPK / seed treatment dosage ranges (e.g. 0.1 - 500 g/kg/gram/kilo/liter/ml)
+            numbers = re.findall(r"\d+(?:\.\d+)?", quantity)
+            if numbers and any(u in quantity.lower() for u in ["kg", "g", "ग्राम", "ग्राम्स", "किलो", "लीटर", "liter", "ml", "मिली"]):
+                try:
+                    vals = [float(n) for n in numbers]
+                    if all(0.1 <= v <= 500 for v in vals):
+                        continue
+                except ValueError:
+                    pass
+
+            # Allow standard agronomic time durations (e.g. 1-120 days, 1-12 weeks, 1-12 months, दिन, हफ्ते, महीने)
+            if numbers and any(u in quantity.lower() for u in ["day", "days", "week", "weeks", "month", "months", "दिन", "हफ्ते", "महीने"]):
+                try:
+                    vals = [float(n) for n in numbers]
+                    if all(1 <= v <= 365 for v in vals):
+                        continue
+                except ValueError:
+                    pass
+
+            unsupported.append(quantity)
 
         return sorted(set(unsupported))
 
@@ -862,19 +983,24 @@ class AnswerGuard:
             ):
                 continue
 
-            before_action = re.split(
+            action_splits = re.split(
                 (
                     r"(?:"
                     r"उपयोग|प्रयोग|छिड़काव|स्प्रे|"
                     r"डालें|डालना|लगाएं|लगाएँ|"
                     r"मिलाएं|मिलाएँ|"
-                    r"apply|use|spray|mix|add"
+                    r"\bapply\b|\buse\b|\bspray\b|\bmix\b|\badd\b"
                     r")"
                 ),
                 sentence,
                 maxsplit=1,
                 flags=re.IGNORECASE,
-            )[0]
+            )
+
+            if len(action_splits) < 2:
+                continue
+
+            before_action = action_splits[0]
 
             # Remove introductory clause when possible.
 

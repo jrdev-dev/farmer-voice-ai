@@ -2,7 +2,22 @@ from typing import Any, Dict, List, Optional
 
 from apps.chatbot.services.prompt_builder import PromptBuilder
 from apps.chatbot.services.llm_service import LLMService
+import sys
+
 from apps.chatbot.services.answer_guard import AnswerGuard
+
+
+def _safe_print(*args, **kwargs):
+    """Windows-safe print that handles Unicode/Hindi characters without crashing (cp1252 safe)."""
+    try:
+        print(*args, **kwargs)
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        try:
+            text = " ".join(str(a) for a in args) + "\n"
+            sys.stdout.buffer.write(text.encode("utf-8", errors="replace"))
+            sys.stdout.buffer.flush()
+        except Exception:
+            pass
 
 
 class GenerationService:
@@ -33,7 +48,7 @@ class GenerationService:
 
     SAFE_FALLBACK_HI = (
         "मुझे उपलब्ध कृषि ज्ञान में इसका विश्वसनीय उत्तर नहीं मिला। "
-        "कृपया कृषि विशेषज्ञ या कृषि विज्ञान केंद्र (KVK) से संपर्क करें।"
+        "अधिक जानकारी के लिए Krishi GK एक्सपर्ट से संपर्क करें।"
     )
 
     SAFE_FALLBACK_EN = (
@@ -62,7 +77,7 @@ class GenerationService:
         target_language="hi",
     ) -> Dict[str, Any]:
 
-        question = self._clean_text(question)
+        question = self._clean_text(question, target_language)
 
         retrieved_documents = (
             retrieved_documents
@@ -144,7 +159,7 @@ class GenerationService:
 
             raw_answer = self.llm.generate(prompt)
 
-            raw_answer = self._clean_text(raw_answer)
+            raw_answer = self._clean_text(raw_answer, target_language)
 
         except Exception as exc:
 
@@ -218,7 +233,7 @@ class GenerationService:
 
         except Exception as exc:
 
-            print(
+            _safe_print(
                 "ANSWER GUARD ERROR:",
                 str(exc),
             )
@@ -320,7 +335,7 @@ class GenerationService:
         # 9. Final Empty-Answer Protection & Hindi Terminology Sanitization
         # =====================================================
 
-        answer = self._clean_text(answer)
+        answer = self._clean_text(answer, target_language)
         if target_language in ("hi", "hinglish"):
             answer = self._sanitize_hindi_terminology(answer)
             import re
@@ -539,24 +554,58 @@ class GenerationService:
     # Text Helper
     # =========================================================
 
-    @staticmethod
     def _clean_text(
+        self,
         value,
+        target_language="hi",
     ) -> str:
 
-        if value is None:
+        import re
 
+        if value is None:
             return ""
 
-        return " ".join(
+        text = " ".join(
             str(value)
-            .replace(
-                "\x00",
-                " ",
-            )
+            .replace("\x00", " ")
             .strip()
             .split()
         )
+
+        if text:
+            # Normalize Devanagari numerals (१, २, ३) to standard digits (1, 2, 3)
+            devanagari_to_arabic = str.maketrans("०१२३४५६७८९", "0123456789")
+            text = text.translate(devanagari_to_arabic)
+
+            # Replace accidental Perso-Arabic/Urdu script tokens with pure Devanagari Hindi
+            text = text.replace("آلو", "आलू").replace("آ", "आ")
+
+            # Softcoded Universal Character Filter Based on Target Language
+            lang_code = target_language.split("-")[0].lower() if target_language else "hi"
+            if lang_code == "hinglish":
+                lang_code = "hi"
+
+            ALLOWED_BLOCKS = {
+                "hi": r'\u0900-\u097F',
+                "mr": r'\u0900-\u097F',
+                "ta": r'\u0B80-\u0BFF',
+                "te": r'\u0C00-\u0C7F',
+                "kn": r'\u0C80-\u0CFF',
+                "ml": r'\u0D00-\u0D7F',
+                "gu": r'\u0A80-\u0AFF',
+                "pa": r'\u0A00-\u0A7F',
+                "bn": r'\u0980-\u09FF',
+                "en": r'' # Only Latin
+            }
+
+            if lang_code in ALLOWED_BLOCKS:
+                target_block = ALLOWED_BLOCKS[lang_code]
+                # Allow Basic Latin (\u0000-\u007F), Punctuation (\u2000-\u206F), and the Target Script Block.
+                # Strip everything else (which removes Thai, Chinese, Cyrillic hallucinations)
+                pattern = f'[^\u0000-\u007F\u2000-\u206F{target_block}]'
+                text = re.sub(pattern, '', text)
+
+        return text.strip()
 
     # =========================================================
     # Debug
@@ -570,30 +619,30 @@ class GenerationService:
         result,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("GENERATION SERVICE")
+        _safe_print("GENERATION SERVICE")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Question        :",
             question,
         )
 
-        print(
+        _safe_print(
             "Documents       :",
             len(documents),
         )
 
-        print(
+        _safe_print(
             "Evidence Count  :",
             len(evidence_texts),
         )
 
-        print("-" * 80)
+        _safe_print("-" * 80)
 
-        print(
+        _safe_print(
             "Raw Answer      :",
             result.get(
                 "raw_answer",
@@ -601,7 +650,7 @@ class GenerationService:
             ),
         )
 
-        print(
+        _safe_print(
             "Valid           :",
             result.get(
                 "answer_valid",
@@ -609,7 +658,7 @@ class GenerationService:
             ),
         )
 
-        print(
+        _safe_print(
             "Reason          :",
             result.get(
                 "guard_reason",
@@ -617,7 +666,7 @@ class GenerationService:
             ),
         )
 
-        print(
+        _safe_print(
             "Fallback Used   :",
             result.get(
                 "fallback_used",
@@ -625,21 +674,21 @@ class GenerationService:
             ),
         )
 
-        print(
+        _safe_print(
             "Fallback Source :",
             result.get(
                 "fallback_source",
             ),
         )
 
-        print(
+        _safe_print(
             "Generation Error:",
             result.get(
                 "generation_error",
             ),
         )
 
-        print(
+        _safe_print(
             "Final Answer    :",
             result.get(
                 "answer",
@@ -647,7 +696,7 @@ class GenerationService:
             ),
         )
 
-        print("=" * 80 + "\n")
+        _safe_print("=" * 80 + "\n")
 
     def _translate_to_target_language(self, text: str, target_language: str) -> str:
         """
@@ -668,11 +717,20 @@ class GenerationService:
         if target_language == "en" and not re.search(r'[^\x00-\x7F]', text):
             return text
 
-        lang_name = (
-            "Hindi"
-            if target_language == "hi"
-            else ("Hinglish (Roman Hindi)" if target_language == "hinglish" else ("English" if target_language == "en" else target_language))
-        )
+        lang_map = {
+            "hi": "Hindi",
+            "hinglish": "Hinglish (Roman Hindi)",
+            "en": "English",
+            "mr": "Marathi",
+            "gu": "Gujarati",
+            "pa": "Punjabi",
+            "ta": "Tamil",
+            "te": "Telugu",
+            "kn": "Kannada",
+            "ml": "Malayalam",
+            "bn": "Bengali"
+        }
+        lang_name = lang_map.get(target_language, target_language)
         prompt = (
             f"Translate the following text accurately into {lang_name}. "
             f"Do not explain, add notes, or add markdown formatting. Return ONLY the direct translation:\n\nText: {text}"
@@ -683,7 +741,7 @@ class GenerationService:
                 translated = self._clean_text(translated)
                 return translated
         except Exception as exc:
-            print(f"Universal Translation error: {exc}")
+            _safe_print(f"Universal Translation error: {exc}")
         return text
 
     @staticmethod

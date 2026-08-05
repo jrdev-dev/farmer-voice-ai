@@ -226,7 +226,7 @@ class ContextBuilder:
 
         try:
 
-            result = self.crop_resolver.resolve(text)
+            result = self.crop_resolver.get_primary_crop(text)
 
         except Exception as exc:
 

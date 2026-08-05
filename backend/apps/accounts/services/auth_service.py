@@ -58,7 +58,7 @@ class AuthService:
                 "last_name",
                 "",
             ),
-            phone_number=data.get("phone_number"),
+            phone_number=data.get("phone_number", ""),
             role=data.get(
                 "role",
                 User.Roles.FARMER,

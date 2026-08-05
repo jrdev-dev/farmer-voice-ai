@@ -217,7 +217,6 @@ class ChatAPIView(APIView):
     def _build_server_error(
         language=None,
     ):
-
         formatter = ResponseFormatter()
         validator = ResponseValidator()
 
@@ -228,3 +227,95 @@ class ChatAPIView(APIView):
         )
 
         return validator.sanitize(response)
+
+
+class ConversationListAPIView(APIView):
+    """
+    List user's past conversations or start a new conversation.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from .models import Conversation
+
+        conversations = (
+            Conversation.objects.filter(user=request.user)
+            .order_by("-updated_at", "-created_at")[:30]
+        )
+        data = []
+        for conv in conversations:
+            first_msg = conv.messages.filter(role="USER").first()
+            title = conv.title or (first_msg.content[:40] if first_msg else "New Conversation")
+            data.append({
+                "id": str(conv.id),
+                "title": title,
+                "is_active": conv.is_active,
+                "created_at": conv.created_at,
+                "updated_at": conv.updated_at,
+                "message_count": conv.messages.count(),
+            })
+        return Response(data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        from .services.memory_service import MemoryService
+
+        memory_service = MemoryService()
+        new_conv = memory_service.start_new_conversation(user=request.user)
+        return Response({
+            "id": str(new_conv.id),
+            "title": "New Conversation",
+            "is_active": True,
+        }, status=status.HTTP_201_CREATED)
+
+
+class ConversationDetailAPIView(APIView):
+    """
+    Retrieve past messages or delete a specific conversation.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, conversation_id):
+        from .models import Conversation
+
+        try:
+            conv = Conversation.objects.get(id=conversation_id, user=request.user)
+        except (Conversation.DoesNotExist, ValueError):
+            return Response({"detail": "Conversation not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Mark as active conversation
+        Conversation.objects.filter(user=request.user, is_active=True).update(is_active=False)
+        conv.is_active = True
+        conv.save(update_fields=["is_active"])
+
+        messages_qs = conv.messages.order_by("created_at")
+        messages_data = [
+            {
+                "id": msg.id,
+                "role": msg.role,
+                "content": msg.content,
+                "created_at": msg.created_at,
+            }
+            for msg in messages_qs
+        ]
+
+        first_msg = conv.messages.filter(role="USER").first()
+        title = conv.title or (first_msg.content[:40] if first_msg else "New Conversation")
+
+        return Response({
+            "id": str(conv.id),
+            "title": title,
+            "is_active": conv.is_active,
+            "created_at": conv.created_at,
+            "updated_at": conv.updated_at,
+            "messages": messages_data,
+        }, status=status.HTTP_200_OK)
+
+    def delete(self, request, conversation_id):
+        from .models import Conversation
+
+        try:
+            conv = Conversation.objects.get(id=conversation_id, user=request.user)
+            conv.delete()
+            return Response({"detail": "Conversation deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except (Conversation.DoesNotExist, ValueError):
+            return Response({"detail": "Conversation not found."}, status=status.HTTP_404_NOT_FOUND)

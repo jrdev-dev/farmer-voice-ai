@@ -13,8 +13,16 @@ from apps.chatbot.ui_views import (
     login_page,
     register_page,
 )
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
+    # =========================================================
+    # FAVICON
+    # =========================================================
+    path(
+        "favicon.ico",
+        RedirectView.as_view(url=settings.STATIC_URL + "favicon.ico", permanent=False),
+    ),
     # =========================================================
     # FRONTEND UI
     # =========================================================

@@ -143,31 +143,19 @@ class MemoryService:
         )
 
         # -----------------------------------------------------
-        # Update conversation activity
+        # Update conversation title & activity timestamp
         # -----------------------------------------------------
-        #
-        # If updated_at uses auto_now=True Django will normally
-        # update it when save() executes.
-        # This explicit save ensures the conversation moves to
-        # the top after new activity.
-        # -----------------------------------------------------
-
         try:
-
+            update_fields = ["updated_at"]
             conversation.updated_at = timezone.now()
 
-            conversation.save(
-                update_fields=[
-                    "updated_at",
-                ]
-            )
+            if role == Message.Role.USER and not conversation.title:
+                conversation.title = message[:50]
+                update_fields.append("title")
+
+            conversation.save(update_fields=update_fields)
 
         except Exception:
-            # Some Conversation model versions may not expose
-            # an editable updated_at field.
-            #
-            # Message persistence should not fail because of
-            # timestamp maintenance.
             pass
 
         return saved_message

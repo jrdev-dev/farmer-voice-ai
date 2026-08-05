@@ -1,6 +1,8 @@
 import logging
 import re
 import time
+import os
+import requests
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -291,8 +293,70 @@ class SpeechToTextService:
         # =====================================================
 
         inference_start = time.perf_counter()
+        
+        raw_text = ""
+        from django.conf import settings
+        groq_key = getattr(settings, "GROQ_API_KEY", None) or os.environ.get("GROQ_API_KEY")
+        
+        # In production, prioritize Groq API if available for speed and accuracy
+        if groq_key:
+            import requests
+            headers = {"Authorization": f"Bearer {groq_key}"}
+            try:
+                with open(str(audio_file), "rb") as f:
+                    files = {"file": ("audio.webm", f)}
+                    data = {"model": "whisper-large-v3"}
+                    
+                    # Always pass language to prevent Whisper from auto-detecting static as English hallucinations
+                    if whisper_language:
+                        data["language"] = whisper_language
+                        
+                    if initial_prompt:
+                        # Ensure prompt is well within Groq's 896 byte/token limit (cap to 200 chars to be ultra safe with Hindi unicode)
+                        data["prompt"] = initial_prompt[:200]
+                        
+                    resp = requests.post(
+                        "https://api.groq.com/openai/v1/audio/transcriptions", 
+                        headers=headers, 
+                        files=files, 
+                        data=data, 
+                        timeout=15
+                    )
+                    
+                    if resp.status_code == 200:
+                        raw_text = resp.json().get("text", "")
+                        print(f"GROQ SUCCESS! Text: {raw_text}", flush=True)
+                        logger.info("STT completed via Groq Whisper API (Turbo)")
+                    else:
+                        print(f"GROQ FAILED! Status: {resp.status_code}, Response: {resp.text}", flush=True)
+                        logger.error(f"Groq STT API failed with status {resp.status_code}: {resp.text}")
+                        return self._failure_result(
+                            raw_text="", 
+                            language=whisper_language or "hi", 
+                            detected_language=whisper_language or "hi",
+                            language_probability=0.0,
+                            reason=f"Voice recognition server error: {resp.status_code}",
+                            timings={}
+                        )
+            except Exception as e:
+                print(f"GROQ EXCEPTION! {e}", flush=True)
+                logger.error(f"Groq STT request exception: {e}")
+                return self._failure_result(
+                    raw_text="", 
+                    language=whisper_language or "hi", 
+                    detected_language=whisper_language or "hi",
+                    language_probability=0.0,
+                    reason="Voice recognition server timeout. Please try again.",
+                    timings={}
+                )
+        else:
+            print("GROQ KEY IS NONE!", flush=True)
 
-        segments, info = self.model.transcribe(
+        segments = []
+        info = None
+        
+        if not raw_text:
+            segments, info = self.model.transcribe(
             str(audio_file),
             # If user selected Hindi, Gujarati etc.,
             # language detection is not required.
@@ -349,7 +413,8 @@ class SpeechToTextService:
 
                 text_parts.append(segment_text)
 
-        raw_text = self._clean_text(" ".join(text_parts))
+        if not raw_text:
+            raw_text = self._clean_text(" ".join(text_parts))
 
         timings["whisper_inference"] = time.perf_counter() - inference_start
 
@@ -709,12 +774,17 @@ class SpeechToTextService:
         dynamic_vocabulary = self._get_dynamic_vocabulary_prompt()
 
         if not dynamic_vocabulary:
-            return base_prompt
-
-        if language == "hi":
-            return f"{base_prompt} संबंधित कृषि शब्दावली: {dynamic_vocabulary}."
-
-        return f"{base_prompt} Relevant vocabulary: {dynamic_vocabulary}."
+            final_prompt = base_prompt
+        elif language == "hi":
+            final_prompt = f"{base_prompt} संबंधित कृषि शब्दावली: {dynamic_vocabulary}."
+        else:
+            final_prompt = f"{base_prompt} Relevant vocabulary: {dynamic_vocabulary}."
+            
+        # Groq API limits prompt to 896 characters
+        if len(final_prompt) > 850:
+            final_prompt = final_prompt[:850]
+            
+        return final_prompt
 
     # =========================================================
     # Transcript Validation

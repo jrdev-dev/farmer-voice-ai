@@ -466,7 +466,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await response.json();
 
                 if (!response.ok) {
-                    const err = result?.message || result?.detail || (result?.email ? result.email[0] : null) || (result?.password ? result.password[0] : null) || "Registration failed. Please try again.";
+                    let err = "Registration failed. Please try again.";
+                    if (result) {
+                        if (result.message) err = result.message;
+                        else if (result.detail) err = result.detail;
+                        else if (result.email) err = typeof result.email === 'string' ? result.email : result.email[0];
+                        else if (result.password) err = typeof result.password === 'string' ? result.password : result.password[0];
+                        else if (result.error) err = result.error;
+                        else if (result.errors) err = typeof result.errors === 'string' ? result.errors : Object.values(result.errors)[0][0];
+                    }
                     throw new Error(err);
                 }
 

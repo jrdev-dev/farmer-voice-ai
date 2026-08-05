@@ -60,13 +60,13 @@ class ResponseFormatter:
 
     FALLBACK_MESSAGES = {
         "hi": (
-            "मुझे उपलब्ध कृषि ज्ञान में इसका विश्वसनीय उत्तर नहीं मिला। "
-            "कृपया कृषि विशेषज्ञ या कृषि विज्ञान केंद्र (KVK) से संपर्क करें।"
+            "मुझे इस सवाल का सटीक उत्तर कृषि डेटाबेस में नहीं मिला। "
+            "अधिक जानकारी के लिए Krishi GK एक्सपर्ट से संपर्क करें।"
         ),
         "en": (
             "I could not find a reliable answer in the available "
             "agricultural knowledge. Please contact an agriculture "
-            "expert or Krishi Vigyan Kendra (KVK)."
+            "expert or Krishi GK Expert."
         ),
         "hinglish": (
             "Mujhe available krishi knowledge mein iska reliable answer "
@@ -422,7 +422,7 @@ class ResponseFormatter:
         if value is None:
             return ""
 
-        return " ".join(
+        text = " ".join(
             str(value)
             .replace(
                 "\x00",
@@ -431,6 +431,13 @@ class ResponseFormatter:
             .strip()
             .split()
         )
+
+        if text:
+            # Convert Devanagari numerals (१, २, ३) to standard digits (1, 2, 3) for clean readability
+            devanagari_to_arabic = str.maketrans("०१२३४५६७८९", "0123456789")
+            text = text.translate(devanagari_to_arabic)
+
+        return text
 
     def _clean_optional_text(
         self,

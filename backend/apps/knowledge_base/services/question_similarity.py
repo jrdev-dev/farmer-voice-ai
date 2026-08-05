@@ -1,4 +1,4 @@
-from rapidfuzz.fuzz import token_set_ratio
+from rapidfuzz.fuzz import token_set_ratio, token_sort_ratio
 
 from .normalizer import QuestionNormalizer
 
@@ -26,9 +26,10 @@ class QuestionSimilarity:
             knowledge.question
         )
 
-        score = token_set_ratio(
-            query,
-            stored_question,
-        )
+        set_score = float(token_set_ratio(query, stored_question))
+        sort_score = float(token_sort_ratio(query, stored_question))
+
+        # Balanced metric preventing single-word overlap from masking intent mismatch
+        score = (set_score * 0.35) + (sort_score * 0.65)
 
         return float(score) / 100.0

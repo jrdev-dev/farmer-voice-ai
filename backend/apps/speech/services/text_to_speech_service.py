@@ -267,6 +267,49 @@ class TextToSpeechService:
             return self._empty_result(language)
 
         text = str(text).strip()
+        
+        # Convert numeric ranges "10-20" dynamically based on language
+        import re
+        
+        # Softcoded universal mapping for numeric ranges
+        RANGE_JOINERS = {
+            "hi": " से ",
+            "en": " to ",
+            "mr": " ते ",    # Marathi
+            "pa": " ਤੋਂ ",   # Punjabi
+            "te": " నుండి ", # Telugu
+            "ta": " முதல் ", # Tamil
+            "gu": " થી ",    # Gujarati
+            "kn": " ಇಂದ ",   # Kannada
+            "ml": " മുതൽ ",  # Malayalam
+            "bn": " থেকে "   # Bengali
+        }
+        
+        lang_code = language.split("-")[0].lower() if language else "en"
+        joiner = RANGE_JOINERS.get(lang_code, " to ")
+        
+        text = re.sub(r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)', rf'\1{joiner}\2', text)
+        
+        # Softcoded universal mapping for numeric ratios (e.g. 1:1)
+        RATIO_JOINERS = {
+            "hi": " अनुपात ",
+            "en": " ratio ",
+            "mr": " प्रमाण ",
+            "pa": " ਅਨੁਪਾਤ ",
+            "te": " నిష్పత్తి ",
+            "ta": " விகிதம் ",
+            "gu": " ગુણોત્તર ",
+            "kn": " ಅನುಪಾತ ",
+            "ml": " അനുപാതം ",
+            "bn": " অনুপাত "
+        }
+        
+        ratio_joiner = RATIO_JOINERS.get(lang_code, " ratio ")
+        text = re.sub(r'(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)', rf'\1{ratio_joiner}\2', text)
+
+        # Strip Markdown symbols so TTS doesn't pronounce asterisks
+        text = re.sub(r'[*_#`~>\[\]\(\)]', '', text)
+        text = text.strip()
 
         if not text:
 

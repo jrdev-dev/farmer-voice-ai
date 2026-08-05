@@ -62,6 +62,12 @@ const mobileMenuButton =
 const sidebar =
     document.getElementById("sidebar");
 
+const clearChatButton =
+    document.getElementById("clearChatButton");
+
+const sidebarOverlay =
+    document.getElementById("sidebarOverlay");
+
 
 // ============================================================
 // STATE
@@ -71,8 +77,35 @@ let currentConversationId = null;
 
 let isSendingMessage = false;
 
-
 // ============================================================
+// I18N UNIVERSAL UI STRINGS
+// ============================================================
+const UI_STRINGS = {
+    en: {
+        loadingText: "Processing agricultural data...",
+        listenAnswer: "Listen Answer",
+        pauseAnswer: "Pause Answer",
+        paused: "Paused",
+        speaking: "Speaking Answer...",
+        greetingText: "Namaste {name}! 🌾 Welcome to Krishi GK - Farmer AI. How can I assist your farming today? Ask any question by text or voice!"
+    },
+    hi: {
+        loadingText: "कृषि विशेषज्ञ सोच रहे हैं...",
+        listenAnswer: "उत्तर सुनें",
+        pauseAnswer: "रोकें",
+        paused: "रुका हुआ",
+        speaking: "उत्तर बोला जा रहा है...",
+        greetingText: "नमस्ते {name}! 🌾 Krishi GK - Farmer AI में आपका स्वागत है। आज मैं आपकी खेती में कैसे मदद कर सकता हूँ? अपना सवाल लिखें या बोलकर पूछें!"
+    }
+};
+
+let currentAppLanguage = "hi"; // Default
+
+function getUIString(key) {
+    const lang = currentAppLanguage.split("-")[0].toLowerCase();
+    const strings = UI_STRINGS[lang] || UI_STRINGS["hi"];
+    return strings[key] || UI_STRINGS["hi"][key];
+}
 // TOKEN HELPERS
 // ============================================================
 
@@ -913,8 +946,8 @@ function appendAssistantMessage(result) {
             document.createElement("span");
         warningElement.className =
             "confidence-badge low-confidence-notice";
-        warningElement.textContent =
-            "⚠️ सलाह: सटीक जानकारी के लिए कृषि विज्ञान केंद्र (KVK) से संपर्क करें।";
+        warningElement.innerHTML =
+            `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>सलाह: अधिक जानकारी के लिए Krishi GK एक्सपर्ट से संपर्क करें।`;
         metadata.appendChild(warningElement);
     }
 
@@ -974,39 +1007,68 @@ function appendAssistantMessage(result) {
         const speakerButton = document.createElement("button");
         speakerButton.type = "button";
         speakerButton.className = "speaker-listen-btn";
-        speakerButton.innerHTML = "🔊 Listen Answer / उत्तर सुनें";
-        speakerButton.title = "Tap to listen to this answer as many times as you want";
         
-        let activeAudio = null;
+        const playSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+        const pauseSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+        
+        speakerButton.innerHTML = `${playSvg} ${getUIString("listenAnswer")}`;
+        speakerButton.title = "Tap to listen or pause this answer";
+        
+        const audioUrl = result?.audio_url || result?.tts_url || result?.speech_url;
+        let localAudio = null;
+
         speakerButton.addEventListener("click", () => {
-            const audioUrl = result?.audio_url || result?.tts_url || result?.speech_url;
-            if (audioUrl) {
-                if (activeAudio) {
-                    activeAudio.pause();
-                    activeAudio.currentTime = 0;
+            if (window.currentSpeakerButton === speakerButton && window.currentSpeakingAudio) {
+                if (!window.currentSpeakingAudio.paused) {
+                    window.currentSpeakingAudio.pause();
+                    speakerButton.innerHTML = `${playSvg} ${getUIString("paused")}`;
+                    if ("speechSynthesis" in window) window.speechSynthesis.pause();
+                    return;
+                } else {
+                    window.currentSpeakingAudio.play();
+                    speakerButton.innerHTML = `${pauseSvg} ${getUIString("pauseAnswer")}`;
+                    if ("speechSynthesis" in window) window.speechSynthesis.resume();
+                    return;
                 }
-                activeAudio = new Audio(audioUrl);
-                speakerButton.innerHTML = "🔊 Playing Answer...";
-                activeAudio.play().then(() => {
-                    activeAudio.onended = () => {
-                        speakerButton.innerHTML = "🔊 Listen Answer / उत्तर सुनें";
+            }
+
+            if (typeof window.stopAllAudio === "function") {
+                window.stopAllAudio();
+            }
+
+            window.currentSpeakerButton = speakerButton;
+
+            if (audioUrl) {
+                if (!localAudio) {
+                    localAudio = new Audio(audioUrl);
+                }
+                window.currentSpeakingAudio = localAudio;
+                
+                speakerButton.innerHTML = `${pauseSvg} ${getUIString("pauseAnswer")}`;
+                localAudio.play().then(() => {
+                    localAudio.onended = () => {
+                        speakerButton.innerHTML = `${playSvg} ${getUIString("listenAnswer")}`;
+                        window.currentSpeakerButton = null;
+                        window.currentSpeakingAudio = null;
                     };
                 }).catch(() => {
-                    speakFallbackWebSpeech(answer, result?.language, speakerButton);
+                    speakFallbackWebSpeech(answer, result?.language, speakerButton, playSvg, pauseSvg);
                 });
             } else {
-                speakFallbackWebSpeech(answer, result?.language, speakerButton);
+                speakFallbackWebSpeech(answer, result?.language, speakerButton, playSvg, pauseSvg);
             }
         });
 
-        function speakFallbackWebSpeech(textToSpeak, lang, btn) {
+        function speakFallbackWebSpeech(textToSpeak, lang, btn, pSvg, stopSvg) {
             if (!("speechSynthesis" in window)) return;
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
             utterance.lang = lang === "en" ? "en-IN" : "hi-IN";
-            btn.innerHTML = "🔊 Speaking Answer...";
+            btn.innerHTML = `${stopSvg} ${getUIString("speaking")}`;
+            
             utterance.onend = () => {
-                btn.innerHTML = "🔊 Listen Answer / उत्तर सुनें";
+                btn.innerHTML = `${pSvg} ${getUIString("listenAnswer")}`;
+                window.currentSpeakerButton = null;
             };
             window.speechSynthesis.speak(utterance);
         }
@@ -1028,6 +1090,10 @@ function appendAssistantMessage(result) {
 
 
     scrollMessagesToBottom();
+
+    if (typeof fetchConversations === "function") {
+        fetchConversations();
+    }
 }
 
 
@@ -1121,34 +1187,21 @@ function showWelcomePanel() {
 // ============================================================
 
 function showTypingIndicator() {
-
-    if (!typingIndicator) {
-        return;
+    if (!typingIndicator) return;
+    typingIndicator.hidden = false;
+    typingIndicator.style.display = "";
+    
+    // Dynamically update the loading text based on current language
+    const typingTextEl = typingIndicator.querySelector(".typing-text");
+    if (typingTextEl) {
+        typingTextEl.textContent = getUIString("loadingText");
     }
-
-
-    typingIndicator.hidden =
-        false;
-
-
-    typingIndicator.style.display =
-        "";
 }
 
-
 function hideTypingIndicator() {
-
-    if (!typingIndicator) {
-        return;
-    }
-
-
-    typingIndicator.hidden =
-        true;
-
-
-    typingIndicator.style.display =
-        "none";
+    if (!typingIndicator) return;
+    typingIndicator.hidden = true;
+    typingIndicator.style.display = "none";
 }
 
 
@@ -1311,12 +1364,28 @@ let recordingStartedAt = null;
 
 let recordingTimerInterval = null;
 
+// ============================================================
+// VOICE ACTIVITY DETECTION (VAD) STATE
+// ============================================================
 
+let vadAudioContext = null;
+let vadAnalyser = null;
+let vadMicrophone = null;
+let vadSilenceTimer = null;
+let vadCheckInterval = null;
+let isSpeaking = false;
+const SILENCE_THRESHOLD_MS = 1500; // 1.5 seconds of silence
+const VOLUME_THRESHOLD = 3; // out of 255 (adjust based on mic noise floor)
 // ============================================================
 // START VOICE RECORDING
 // ============================================================
 
 async function startVoiceRecording() {
+
+    // Automatically stop any playing AI answers when user starts asking a new question
+    if (typeof window.stopAllAudio === "function") {
+        window.stopAllAudio();
+    }
 
     if (isRecording || isProcessingVoice) {
         return;
@@ -1365,6 +1434,9 @@ async function startVoiceRecording() {
                     audio: true,
                 }
             );
+
+        // Start VAD monitoring
+        setupVAD(microphoneStream);
 
 
         recordedAudioChunks = [];
@@ -1915,6 +1987,11 @@ async function sendVoiceRecording(
         };
 
 
+        // Update global app language state for UI consistency
+        if (result?.language) {
+            currentAppLanguage = result.language;
+        }
+
         appendAssistantMessage(
             normalizedResult
         );
@@ -1931,10 +2008,8 @@ async function sendVoiceRecording(
 
 
         if (audioUrl) {
-
-            await playResponseAudio(
-                audioUrl
-            );
+            // Disabled automatic TTS auto-play per user request
+            // await playResponseAudio(audioUrl);
         }
 
 
@@ -2110,27 +2185,42 @@ async function playResponseAudio(
 // ============================================================
 
 function stopResponseAudio() {
-
-    if (!responseAudioPlayer) {
-        return;
-    }
-
-
-    try {
-
-        responseAudioPlayer.pause();
-
-        responseAudioPlayer.currentTime =
-            0;
-
-    } catch (error) {
-
-        console.warn(
-            "Unable to stop response audio:",
-            error
-        );
+    if (typeof window.stopAllAudio === "function") {
+        window.stopAllAudio();
     }
 }
+
+// Global audio stop function to prevent overlaps
+window.stopAllAudio = function() {
+    // 1. Stop auto-playing response audio player
+    if (responseAudioPlayer) {
+        try {
+            responseAudioPlayer.pause();
+            responseAudioPlayer.currentTime = 0;
+        } catch (e) {}
+    }
+
+    // 2. Stop manually clicked speaker buttons
+    if (window.currentSpeakingAudio) {
+        try {
+            window.currentSpeakingAudio.pause();
+            window.currentSpeakingAudio.currentTime = 0;
+            window.currentSpeakingAudio = null;
+        } catch (e) {}
+    }
+
+    // 3. Reset the button UI of the last clicked speaker button
+    if (window.currentSpeakerButton) {
+        const playSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>`;
+        window.currentSpeakerButton.innerHTML = `${playSvg} ${typeof getUIString === 'function' ? getUIString("listenAnswer") : "Listen Answer"}`;
+        window.currentSpeakerButton = null;
+    }
+
+    // 4. Cancel fallback text-to-speech
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+    }
+};
 
 
 // ============================================================
@@ -2161,6 +2251,31 @@ function setRecordingUI(
             recording
                 ? "Stop recording"
                 : "Ask with voice";
+
+        // Toggle Icon
+        if (recording) {
+            // Stop Icon (Square)
+            voiceButton.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                    <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
+                </svg>
+            `;
+            // Add pulse effect inline or via class
+            voiceButton.style.color = "red";
+            voiceButton.style.animation = "pulse 1.5s infinite";
+        } else {
+            // Mic Icon
+            voiceButton.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            `;
+            voiceButton.style.color = "";
+            voiceButton.style.animation = "";
+        }
     }
 
 
@@ -2178,9 +2293,19 @@ function setRecordingUI(
 
 
     if (stopRecordingButton) {
+        stopRecordingButton.hidden = !recording;
+    }
 
-        stopRecordingButton.hidden =
-            !recording;
+    // Professional Voice Recording Popup UI
+    const vModal = document.getElementById("voiceModal");
+    if (vModal) {
+        vModal.hidden = !recording;
+        // Optionally add animation/display logic
+        if (recording) {
+            vModal.style.display = "flex";
+        } else {
+            vModal.style.display = "none";
+        }
     }
 }
 
@@ -2319,10 +2444,90 @@ function updateRecordingTimer() {
 
 
 // ============================================================
+// VOICE ACTIVITY DETECTION (VAD) LOGIC
+// ============================================================
+
+function setupVAD(stream) {
+    cleanupVAD(); // Ensure clean state
+    
+    try {
+        vadAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        vadAnalyser = vadAudioContext.createAnalyser();
+        vadMicrophone = vadAudioContext.createMediaStreamSource(stream);
+        
+        // Minimal FFT size for fast performance
+        vadAnalyser.fftSize = 256;
+        vadMicrophone.connect(vadAnalyser);
+        
+        const dataArray = new Uint8Array(vadAnalyser.frequencyBinCount);
+        
+        vadCheckInterval = setInterval(() => {
+            if (!vadAnalyser || !isRecording) return;
+            
+            vadAnalyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+            }
+            const averageVolume = sum / dataArray.length;
+            
+            if (averageVolume > VOLUME_THRESHOLD) {
+                // User is speaking (or background noise is high)
+                isSpeaking = true;
+                if (vadSilenceTimer) {
+                    clearTimeout(vadSilenceTimer);
+                    vadSilenceTimer = null;
+                }
+            } else {
+                // User is silent
+                if (isSpeaking && !vadSilenceTimer) {
+                    // Start silence countdown
+                    vadSilenceTimer = setTimeout(() => {
+                        console.log("VAD: Silence detected, auto-stopping recording.");
+                        if (isRecording) {
+                            stopVoiceRecording();
+                        }
+                    }, SILENCE_THRESHOLD_MS);
+                }
+            }
+        }, 100); // Check volume every 100ms
+        
+    } catch (e) {
+        console.warn("VAD Initialization failed, falling back to manual stop button.", e);
+    }
+}
+
+function cleanupVAD() {
+    if (vadCheckInterval) {
+        clearInterval(vadCheckInterval);
+        vadCheckInterval = null;
+    }
+    if (vadSilenceTimer) {
+        clearTimeout(vadSilenceTimer);
+        vadSilenceTimer = null;
+    }
+    if (vadMicrophone) {
+        vadMicrophone.disconnect();
+        vadMicrophone = null;
+    }
+    if (vadAnalyser) {
+        vadAnalyser.disconnect();
+        vadAnalyser = null;
+    }
+    if (vadAudioContext && vadAudioContext.state !== 'closed') {
+        vadAudioContext.close().catch(e => console.warn(e));
+        vadAudioContext = null;
+    }
+    isSpeaking = false;
+}
+
+// ============================================================
 // CLEAN MICROPHONE STREAM
 // ============================================================
 
 function cleanupMicrophoneStream() {
+
+    cleanupVAD();
 
     if (!microphoneStream) {
         return;
@@ -2390,15 +2595,26 @@ if (voiceButton) {
 // ============================================================
 
 if (stopRecordingButton) {
+    stopRecordingButton.addEventListener("click", () => {
+        stopVoiceRecording();
+    });
+}
 
-    stopRecordingButton.addEventListener(
-        "click",
-        () => {
+const stopVoiceBtn = document.getElementById("stopVoiceBtn");
+if (stopVoiceBtn) {
+    stopVoiceBtn.addEventListener("click", () => {
+        stopVoiceRecording();
+    });
+}
 
-            stopVoiceRecording();
-
-        }
-    );
+const closeVoiceModal = document.getElementById("closeVoiceModal");
+if (closeVoiceModal) {
+    closeVoiceModal.addEventListener("click", () => {
+        cleanupMicrophoneStream();
+        stopRecordingTimer();
+        setRecordingUI(false);
+        isRecording = false;
+    });
 }
 
 
@@ -4802,6 +5018,12 @@ if (newChatButton) {
     );
 }
 
+if (clearChatButton) {
+    clearChatButton.addEventListener("click", () => {
+        startNewChat();
+    });
+}
+
 
 function startNewChat() {
 
@@ -4943,6 +5165,161 @@ function startNewChat() {
             "New chat started."
         );
     }
+
+    // Call backend endpoint to start a fresh active conversation
+    try {
+        const token = getAccessToken();
+        fetch("/api/chat/conversations/new/", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        }).then(() => fetchConversations()).catch(() => {});
+    } catch (e) {}
+}
+
+
+// ============================================================
+// CONVERSATION HISTORY MODULE (CHATGPT STYLE)
+// ============================================================
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+async function fetchConversations() {
+    const conversationList = document.getElementById("conversationList");
+    if (!conversationList) return;
+
+    try {
+        const token = getAccessToken();
+        if (!token) return;
+
+        const res = await fetch("/api/chat/conversations/", {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        renderConversationList(data);
+    } catch (err) {
+        console.error("Failed to fetch conversations", err);
+    }
+}
+
+function renderConversationList(conversations) {
+    const conversationList = document.getElementById("conversationList");
+    if (!conversationList) return;
+
+    if (!conversations || conversations.length === 0) {
+        conversationList.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:6px 8px;">No recent chats</div>`;
+        return;
+    }
+
+    conversationList.innerHTML = conversations.map(conv => `
+        <button type="button" class="conversation-item ${conv.is_active ? 'active' : ''}" data-id="${conv.id}">
+            <span class="conversation-title" title="${escapeHtml(conv.title)}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(conv.title)}</span>
+            </span>
+            <span class="delete-chat-btn" data-id="${conv.id}" title="Delete Chat">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </span>
+        </button>
+    `).join("");
+
+    conversationList.querySelectorAll(".conversation-item").forEach(item => {
+        item.addEventListener("click", (e) => {
+            const delBtn = e.target.closest(".delete-chat-btn");
+            if (delBtn) {
+                e.stopPropagation();
+                deleteConversation(delBtn.dataset.id);
+                return;
+            }
+            const convId = item.dataset.id;
+            loadConversation(convId);
+        });
+    });
+}
+
+async function loadConversation(convId) {
+    try {
+        const token = getAccessToken();
+        if (!token) return;
+
+        const res = await fetch(`/api/chat/conversations/${convId}/`, {
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const welcomePanel = document.getElementById("welcomePanel");
+        if (welcomePanel) welcomePanel.hidden = true;
+
+        if (messagesList) messagesList.innerHTML = "";
+
+        if (data.messages && data.messages.length > 0) {
+            data.messages.forEach(msg => {
+                if (msg.role === "USER") {
+                    appendUserMessage(msg.content);
+                } else {
+                    appendAssistantMessage({
+                        answer: msg.content,
+                        language: null,
+                        confidence: 90
+                    });
+                }
+            });
+        }
+
+        fetchConversations();
+    } catch (err) {
+        console.error("Failed to load conversation", err);
+    }
+}
+
+async function deleteConversation(convId) {
+    try {
+        const token = getAccessToken();
+        if (!token) return;
+
+        // Optimistically remove from DOM to prevent 404s from double clicks
+        const conversationList = document.getElementById("conversationList");
+        if (conversationList) {
+            const itemToRemove = conversationList.querySelector(`.conversation-item[data-id="${convId}"]`);
+            if (itemToRemove) {
+                itemToRemove.remove();
+            }
+        }
+
+        const res = await fetch(`/api/chat/conversations/${convId}/`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        });
+        if (res.ok) {
+            if (convId === currentConversationId) {
+                startNewChat();
+            } else {
+                fetchConversations();
+            }
+        }
+    } catch (err) {
+        console.error("Failed to delete conversation", err);
+    }
 }
 
 
@@ -4981,6 +5358,13 @@ if (
     );
 }
 
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener("click", (e) => {
+        e.stopPropagation();
+        closeSidebar();
+    });
+}
+
 
 // ============================================================
 // OPEN SIDEBAR
@@ -5009,6 +5393,10 @@ function openSidebar() {
             "aria-expanded",
             "true"
         );
+    }
+    
+    if (sidebarOverlay) {
+        sidebarOverlay.classList.add("show");
     }
 }
 
@@ -5040,6 +5428,10 @@ function closeSidebar() {
             "aria-expanded",
             "false"
         );
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.classList.remove("show");
     }
 }
 
@@ -6109,6 +6501,9 @@ console.log(
 // UI ENHANCEMENTS: THEME TOGGLE & QUICK PROMPTS
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+    // Initial fetch of past conversation history (ChatGPT style)
+    fetchConversations();
+
     // Theme Toggle
     const themeBtn = document.getElementById("themeToggleBtn");
     const savedTheme = localStorage.getItem("farmer_ui_theme") || "light";
@@ -6131,9 +6526,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Quick Prompts / Cards Click
-    document.querySelectorAll("[data-prompt]").forEach(elem => {
+    document.querySelectorAll(".prompt-chip, .grid-card").forEach(elem => {
         elem.addEventListener("click", () => {
-            const promptText = elem.getAttribute("data-prompt");
+            const hiddenSpan = elem.querySelector(".hidden-prompt");
+            let promptText = null;
+            if (hiddenSpan) {
+                promptText = hiddenSpan.innerText.trim();
+            } else if (elem.hasAttribute("data-prompt")) {
+                promptText = elem.getAttribute("data-prompt");
+            }
+
             const inputField = document.getElementById("messageInput");
             const form = document.getElementById("chatForm");
             if (inputField && promptText) {
@@ -6180,7 +6582,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (welcomePan) welcomePan.style.display = "none";
 
             appendAssistantMessage({
-                answer: `Namaste ${userNameStr}! 🌾 Welcome to Farmer Voice AI. How can I assist your farming today? Ask any question by text, voice, or crop image!`,
+                answer: getUIString("greetingText").replace("{name}", userNameStr),
+                language: currentAppLanguage,
                 isGreeting: true
             });
         } catch (greetErr) {

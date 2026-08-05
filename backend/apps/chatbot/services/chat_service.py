@@ -1,5 +1,20 @@
 import logging
+import sys
 logger = logging.getLogger(__name__)
+
+
+def _safe_print(*args, **kwargs):
+    """Windows-safe print that handles Unicode/Hindi characters without crashing.
+    Falls back to UTF-8 encoded bytes write when stdout encoding is limited (e.g. cp1252)."""
+    try:
+        print(*args, **kwargs)
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        try:
+            text = " ".join(str(a) for a in args) + "\n"
+            sys.stdout.buffer.write(text.encode("utf-8", errors="replace"))
+            sys.stdout.buffer.flush()
+        except Exception:
+            pass
 
 from .memory_service import MemoryService
 from .context_builder import ContextBuilder
@@ -270,14 +285,14 @@ class ChatService:
                 answer,
             )
 
-            print("\n" + "=" * 80)
-            print("CONTEXT MESSAGE")
-            print("=" * 80)
-            print("Stored Context :", message)
-            print("Retriever      : SKIPPED")
-            print("Relevance      : SKIPPED")
-            print("LLM            : SKIPPED")
-            print("=" * 80 + "\n")
+            _safe_print("\n" + "=" * 80)
+            _safe_print("CONTEXT MESSAGE")
+            _safe_print("=" * 80)
+            _safe_print("Stored Context :", message)
+            _safe_print("Retriever      : SKIPPED")
+            _safe_print("Relevance      : SKIPPED")
+            _safe_print("LLM            : SKIPPED")
+            _safe_print("=" * 80 + "\n")
 
             response = self.response_formatter.format_success(
                 answer=answer,
@@ -341,7 +356,7 @@ class ChatService:
                 if translated_query and len(translated_query) > 3:
                     search_query = translated_query
             except Exception as exc:
-                print(f"Cross-lingual query translation skipped: {exc}")
+                _safe_print(f"Cross-lingual query translation skipped: {exc}")
 
         try:
 
@@ -377,22 +392,26 @@ class ChatService:
         # =====================================================
 
         top_documents = []
+        best = None
+        knowledge = None
         relevance_result = {"is_relevant": False, "reason": "General AI parametric knowledge used."}
 
         if ranked_results:
             best = ranked_results[0]
-            if isinstance(best, dict) and best.get("knowledge") is not None:
-                try:
-                    eval_res = self.relevance.evaluate(
-                        best_result=best,
-                        question=enriched_question,
-                    )
-                    if isinstance(eval_res, dict):
-                        relevance_result = eval_res
-                        if eval_res.get("is_relevant", False):
-                            top_documents = self.evidence_selector.select(ranked_results)
-                except Exception as exc:
-                    self._debug_error("RELEVANCE EVALUATION ERROR", exc)
+            if isinstance(best, dict):
+                knowledge = best.get("knowledge")
+                if knowledge is not None:
+                    try:
+                        eval_res = self.relevance.evaluate(
+                            best_result=best,
+                            question=search_query,  # Use the retrieval query (English translated) for relevance scoring
+                        )
+                        if isinstance(eval_res, dict):
+                            relevance_result = eval_res
+                            if eval_res.get("is_relevant", False):
+                                top_documents = self.evidence_selector.select(ranked_results)
+                    except Exception as exc:
+                        self._debug_error("RELEVANCE EVALUATION ERROR", exc)
 
         self._debug_evidence(top_documents)
 
@@ -832,13 +851,13 @@ class ChatService:
                 dict,
             ):
 
-                print("\n" + "=" * 80)
+                _safe_print("\n" + "=" * 80)
 
-                print("RESPONSE VALIDATION")
+                _safe_print("RESPONSE VALIDATION")
 
-                print("=" * 80)
+                _safe_print("=" * 80)
 
-                print(
+                _safe_print(
                     "Valid    :",
                     validation_result.get(
                         "is_valid",
@@ -846,7 +865,7 @@ class ChatService:
                     ),
                 )
 
-                print(
+                _safe_print(
                     "Errors   :",
                     validation_result.get(
                         "errors",
@@ -854,7 +873,7 @@ class ChatService:
                     ),
                 )
 
-                print(
+                _safe_print(
                     "Warnings :",
                     validation_result.get(
                         "warnings",
@@ -862,7 +881,7 @@ class ChatService:
                     ),
                 )
 
-                print("=" * 80 + "\n")
+                _safe_print("=" * 80 + "\n")
 
                 validated_response = validation_result.get("response")
 
@@ -1087,18 +1106,18 @@ class ChatService:
         error,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print(title)
+        _safe_print(title)
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Error:",
             str(error),
         )
 
-        print("=" * 80 + "\n")
+        _safe_print("=" * 80 + "\n")
 
     @staticmethod
     def _debug_language(
@@ -1107,28 +1126,28 @@ class ChatService:
         final,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("LANGUAGE DETECTION")
+        _safe_print("LANGUAGE DETECTION")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Message           :",
             message,
         )
 
-        print(
+        _safe_print(
             "Detected Language :",
             detected,
         )
 
-        print(
+        _safe_print(
             "Final Language    :",
             final,
         )
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
     @staticmethod
     def _debug_intent(
@@ -1137,13 +1156,13 @@ class ChatService:
         intent,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("INTENT DETECTION")
+        _safe_print("INTENT DETECTION")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Conversation ID :",
             getattr(
                 conversation,
@@ -1152,17 +1171,17 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Message         :",
             message,
         )
 
-        print(
+        _safe_print(
             "Intent          :",
             intent,
         )
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
     @staticmethod
     def _debug_chat_request(
@@ -1171,13 +1190,13 @@ class ChatService:
         enriched,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("CHAT REQUEST")
+        _safe_print("CHAT REQUEST")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Conversation ID  :",
             getattr(
                 conversation,
@@ -1186,17 +1205,17 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Original Question:",
             original,
         )
 
-        print(
+        _safe_print(
             "Context Question :",
             enriched,
         )
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
     @staticmethod
     def _debug_relevance(
@@ -1205,13 +1224,13 @@ class ChatService:
         result,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("RELEVANCE GUARD")
+        _safe_print("RELEVANCE GUARD")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Best Knowledge  :",
             getattr(
                 knowledge,
@@ -1220,7 +1239,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Knowledge Crop  :",
             getattr(
                 knowledge,
@@ -1229,12 +1248,12 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Question        :",
             question,
         )
 
-        print(
+        _safe_print(
             "Relevant        :",
             result.get(
                 "is_relevant",
@@ -1242,7 +1261,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Reason          :",
             result.get(
                 "reason",
@@ -1250,7 +1269,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Evidence Count  :",
             result.get(
                 "evidence_count",
@@ -1258,7 +1277,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Evidence        :",
             result.get(
                 "evidence",
@@ -1266,7 +1285,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Raw Scores      :",
             result.get(
                 "scores",
@@ -1274,7 +1293,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Crop Validation :",
             result.get(
                 "crop_validation",
@@ -1282,18 +1301,18 @@ class ChatService:
             ),
         )
 
-        print("=" * 80 + "\n")
+        _safe_print("=" * 80 + "\n")
 
     def _debug_evidence(
         self,
         documents,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("EVIDENCE SELECTION")
+        _safe_print("EVIDENCE SELECTION")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
         for index, item in enumerate(
             documents,
@@ -1308,7 +1327,7 @@ class ChatService:
 
             knowledge = item.get("knowledge")
 
-            print(
+            _safe_print(
                 f"{index}.",
                 getattr(
                     knowledge,
@@ -1317,7 +1336,7 @@ class ChatService:
                 ),
             )
 
-            print(
+            _safe_print(
                 "   Crop     :",
                 getattr(
                     knowledge,
@@ -1326,7 +1345,7 @@ class ChatService:
                 ),
             )
 
-            print(
+            _safe_print(
                 "   Hybrid   :",
                 round(
                     self._safe_float(
@@ -1339,7 +1358,7 @@ class ChatService:
                 ),
             )
 
-            print(
+            _safe_print(
                 "   Question :",
                 round(
                     self._safe_float(
@@ -1355,7 +1374,7 @@ class ChatService:
                 ),
             )
 
-            print(
+            _safe_print(
                 "   Semantic :",
                 round(
                     self._safe_float(
@@ -1368,7 +1387,7 @@ class ChatService:
                 ),
             )
 
-        print("=" * 80 + "\n")
+        _safe_print("=" * 80 + "\n")
 
     def _debug_final(
         self,
@@ -1384,13 +1403,13 @@ class ChatService:
         answer,
     ):
 
-        print("\n" + "=" * 80)
+        _safe_print("\n" + "=" * 80)
 
-        print("FINAL RAG RESULT")
+        _safe_print("FINAL RAG RESULT")
 
-        print("=" * 80)
+        _safe_print("=" * 80)
 
-        print(
+        _safe_print(
             "Best Knowledge :",
             getattr(
                 knowledge,
@@ -1399,7 +1418,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Knowledge Crop :",
             getattr(
                 knowledge,
@@ -1408,7 +1427,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Hybrid Score   :",
             round(
                 self._safe_float(
@@ -1416,22 +1435,24 @@ class ChatService:
                         "score",
                         0,
                     )
+                    if isinstance(best, dict)
+                    else 0
                 ),
                 4,
             ),
         )
 
-        print(
+        _safe_print(
             "Confidence     :",
             confidence,
         )
 
-        print(
+        _safe_print(
             "Confidence Type:",
             confidence_label,
         )
 
-        print(
+        _safe_print(
             "Agreement      :",
             confidence_result.get(
                 "agreement",
@@ -1439,7 +1460,7 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Adjustments    :",
             confidence_result.get(
                 "adjustments",
@@ -1447,31 +1468,31 @@ class ChatService:
             ),
         )
 
-        print(
+        _safe_print(
             "Answer Valid   :",
             answer_valid,
         )
 
-        print(
+        _safe_print(
             "Fallback Used  :",
             fallback_used,
         )
 
-        print(
+        _safe_print(
             "Fallback Source:",
             fallback_source,
         )
 
-        print(
+        _safe_print(
             "Sources        :",
             len(sources),
         )
 
-        print("\nGenerated Answer:")
+        _safe_print("\nGenerated Answer:")
 
-        print(answer)
+        _safe_print(answer)
 
-        print("=" * 80 + "\n")
+        _safe_print("=" * 80 + "\n")
 
     # =========================================================
     # Generic Helpers

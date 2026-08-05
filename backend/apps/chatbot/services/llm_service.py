@@ -181,7 +181,7 @@ class LLMService:
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.05,
-            "max_tokens": 500,
+            "max_tokens": 1024,
         }
 
         try:
@@ -237,7 +237,7 @@ class LLMService:
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": 0.05,
-                "maxOutputTokens": 500,
+                "maxOutputTokens": 1024,
             },
         }
 
@@ -292,7 +292,7 @@ class LLMService:
                 "top_p": 0.85,
                 # Existing model/context configuration.
                 # Farmer answer should stay concise.
-                "num_predict": 160,
+                "num_predict": 1024,
 
                 "num_ctx": 2048,
                 # Helps reduce repeated generation.

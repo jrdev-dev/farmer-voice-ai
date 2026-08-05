@@ -5,9 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Farmer Voice AI - Multilingual Precision Agriculture Assistant">
+    <meta name="description" content="Farmer AI - Multilingual Precision Agriculture Assistant">
+    <meta name="theme-color" content="#121212">
 
-    <title>Farmer Voice AI | Intelligence Portal</title>
+    <title>Farmer AI | Intelligence Portal</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,25 +29,34 @@
             
             <div class="sidebar-header">
                 <div class="brand-badge">
-                    <span class="brand-icon">🌾</span>
+                    <svg class="brand-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12A10 10 0 0 1 12 2z" fill="var(--primary)" opacity="0.15"/>
+                        <path d="M12 22V12"/>
+                        <path d="M12 12C12 7.5 7.5 6 7.5 6C7.5 10.5 12 12 12 12Z" fill="currentColor"/>
+                        <path d="M12 15C12 11.5 16.5 10 16.5 10C16.5 13.5 12 15 12 15Z" fill="currentColor"/>
+                    </svg>
                 </div>
                 <div class="brand-info">
-                    <h1 class="brand-title">Farmer Voice AI</h1>
-                    <span class="system-status"><span class="pulse-dot"></span> System Ready</span>
+                    <h1 class="brand-title">Farmer AI</h1>
+                    <span class="system-status"><span class="pulse-dot"></span> सिस्टम तैयार</span>
                 </div>
             </div>
 
             <!-- New Chat Action -->
             <button type="button" class="btn-new-chat" id="newChatButton">
-                <span class="plus-icon">＋</span> New Conversation
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>नई बातचीत</span>
             </button>
 
             <!-- Language Selection -->
             <div class="sidebar-block">
-                <label for="languageSelect" class="block-label">🌐 Query Language</label>
-                <select id="languageSelect" class="language-dropdown">
-                    <option value="" selected>✨ Auto Detect Language</option>
-                    <option value="hi">हिन्दी (Hindi)</option>
+                <label for="languageSelect" class="block-label">भाषा चुनें (UI & QUERY)</label>
+                <select id="languageSelect" class="language-dropdown" onchange="changeUILanguage(this.value);">
+                    <option value="hi" selected>हिन्दी (Hindi)</option>
+                    <option value="">Auto Detect Language</option>
                     <option value="en">English</option>
                     <option value="hinglish">Hinglish</option>
                     <option value="mr">मराठी (Marathi)</option>
@@ -59,48 +69,64 @@
 
             <!-- Quick Suggestions -->
             <div class="sidebar-block">
-                <div class="block-label">💡 Quick Prompts</div>
+                <div class="block-label">त्वरित सुझाव</div>
                 <div class="prompt-chips-list">
-                    <button type="button" class="prompt-chip" data-prompt="अदरक के लिए कौन सी मिट्टी उपयुक्त है?">
-                        🫚 Ginger Soil Types
+                    <button type="button" class="prompt-chip">
+                        अदरक की मिट्टी
+                        <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">अदरक के लिए कौन सी मिट्टी उपयुक्त है?</span>
                     </button>
-                    <button type="button" class="prompt-chip" data-prompt="लाल मिट्टी में मुख्य रूप से कौन से पोषक तत्व पाए जाते हैं?">
-                        ⛰️ Red Soil Nutrients
+                    <button type="button" class="prompt-chip">
+                        लाल मिट्टी के पोषक
+                        <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">लाल मिट्टी में मुख्य रूप से कौन से पोषक तत्व पाए जाते हैं?</span>
                     </button>
-                    <button type="button" class="prompt-chip" data-prompt="गेहूं की बुवाई का सही समय क्या है?">
-                        🌾 Wheat Sowing Season
+                    <button type="button" class="prompt-chip">
+                        गेहूं की बुवाई
+                        <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">गेहूं की बुवाई का सही समय क्या है?</span>
                     </button>
-                    <button type="button" class="prompt-chip" data-prompt="धान में मुख्य कीट और उनका नियंत्रण">
-                        🐛 Paddy Pest Control
+                    <button type="button" class="prompt-chip">
+                        धान में कीट नियंत्रण
+                        <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">धान में मुख्य कीट और उनका नियंत्रण</span>
                     </button>
-                    <button type="button" class="prompt-chip" data-prompt="What are Khadar and Bhangar soil?">
-                        📜 Khadar vs Bhangar Soil
+                    <button type="button" class="prompt-chip">
+                        खादर और बांगर मिट्टी
+                        <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">खादर और बांगर मिट्टी क्या हैं?</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Capabilities List -->
-            <div class="sidebar-block capabilities-block">
-                <div class="block-label">⚡ AI Capabilities</div>
-                <ul class="capability-items">
-                    <li>💬 Cross-Lingual Hybrid RAG</li>
-                    <li>🎤 High-Accuracy Voice STT</li>
-                    <li>🔊 Voice Audio Responses</li>
-                    <li>📷 Plant Disease OCR Image Analysis</li>
-                    <li>📚 Verified Agricultural Sources</li>
-                </ul>
+            <!-- Conversation History List (ChatGPT Style) -->
+            <div class="sidebar-block conversation-history-block">
+                <div class="block-label">हाल की बातचीत</div>
+                <div class="conversation-list" id="conversationList">
+                    <!-- Dynamic conversation items rendered via chat.js -->
+                </div>
             </div>
 
             <!-- User Footer -->
             <div class="sidebar-user-footer">
-                <div class="user-avatar-circle">👨‍🌾</div>
+                <div class="user-avatar-circle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </div>
                 <div class="user-details">
-                    <div class="user-name" id="userName">Farmer</div>
+                    <div class="user-name" id="userName">किसान</div>
                     <div class="user-email" id="userEmail">user@example.com</div>
                 </div>
                 <div class="user-actions">
-                    <a href="/admin/" target="_blank" class="icon-btn" title="Admin Control Panel">🛡️</a>
-                    <button type="button" class="icon-btn logout-btn" id="logoutButton" title="Sign Out">🚪</button>
+                    <a href="/admin/" target="_blank" class="icon-btn" title="Admin Control Panel">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                    </a>
+                    <button type="button" class="icon-btn logout-btn" id="logoutButton" title="Sign Out">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -115,23 +141,33 @@
         <main class="main-chat-wrapper">
 
             <!-- Header Bar -->
-            <header class="top-nav-bar">
+            <header class="top-nav-bar" style="position: relative; display: flex; align-items: center; justify-content: space-between;">
                 <div class="nav-left">
                     <button type="button" class="mobile-toggle-btn" id="mobileMenuButton" aria-label="Toggle Menu">
-                        ☰
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
                     </button>
-                    <div class="nav-title-group">
-                        <h2>Agricultural Assistant</h2>
-                        <p>Ask anything about crops, soil, fertilizers, or diseases</p>
-                    </div>
+                </div>
+
+                <div class="nav-title-group" style="position: absolute; left: 50%; transform: translateX(-50%); text-align: center;">
+                    <h2>Krishi GK - कृषि सहायक</h2>
+                    <p>स्मार्ट एआई खेती</p>
                 </div>
 
                 <div class="nav-right">
                     <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="Toggle Light/Dark Theme">
-                        🌙
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
                     </button>
-                    <button type="button" class="clear-chat-btn" id="clearChatButton" title="Clear Chat History">
-                        🗑️
+                    <button type="button" class="clear-chat-btn" id="clearChatButton" title="नई बातचीत">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
                     </button>
                 </div>
             </header>
@@ -141,30 +177,54 @@
                 
                 <!-- Welcome Screen (When Chat is Empty) -->
                 <div class="welcome-screen" id="welcomePanel">
-                    <div class="welcome-badge">🌾 AI Precision Agriculture</div>
-                    <h2 class="welcome-title">Namaste! How can I assist your farm today?</h2>
-                    <p class="welcome-subtitle">Ask questions by voice, text, or upload crop images for instant guidance.</p>
+                    <div class="welcome-badge">Precision Agriculture Portal</div>
+                    <h2 class="welcome-title">नमस्ते! मैं आज आपकी खेती में कैसे मदद कर सकता हूँ?</h2>
+                    <p class="welcome-subtitle">तुरंत मार्गदर्शन के लिए बोलकर या लिखकर अपना सवाल पूछें।</p>
 
                     <div class="quick-grid">
-                        <div class="grid-card" data-prompt="सौंफ की बुवाई कब करें?">
-                            <span class="card-icon">🌱</span>
-                            <h4>Sowing & Sowing Time</h4>
-                            <p>Ask best sowing time for Fennel, Wheat, Mustard</p>
+                        <div class="grid-card">
+                            <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">सौंफ की बुवाई कब करें?</span>
+                            <span class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22V12"/>
+                                    <path d="M12 12C12 7.5 7.5 6 7.5 6C7.5 10.5 12 12 12 12Z"/>
+                                    <path d="M12 15C12 11.5 16.5 10 16.5 10C16.5 13.5 12 15 12 15Z"/>
+                                </svg>
+                            </span>
+                            <h4>बुवाई और उसका समय</h4>
+                            <p>सौंफ, गेहूं, सरसों आदि की बुवाई का सही समय पूछें</p>
                         </div>
-                        <div class="grid-card" data-prompt="अदरक के लिए कौन सी मिट्टी उपयुक्त है?">
-                            <span class="card-icon">🧪</span>
-                            <h4>Soil & Fertilizers</h4>
-                            <p>Check suitable soil types, NPK & Organic compost</p>
+                        <div class="grid-card">
+                            <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">अदरक के लिए कौन सी मिट्टी उपयुक्त है?</span>
+                            <span class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10 2v7.31L4.75 18.5a2 2 0 0 0 1.7 2.9h11.1a2 2 0 0 0 1.7-2.9L14 9.31V2z"/>
+                                    <line x1="8.5" y1="2" x2="15.5" y2="2"/>
+                                </svg>
+                            </span>
+                            <h4>मिट्टी और उर्वरक</h4>
+                            <p>उपयुक्त मिट्टी, NPK और जैविक खाद के बारे में जानें</p>
                         </div>
-                        <div class="grid-card" data-prompt="पत्तियों पर लालिमा क्यों आ रही है?">
-                            <span class="card-icon">🐛</span>
-                            <h4>Disease & Pests</h4>
-                            <p>Identify crop symptoms & recommended sprays</p>
+                        <div class="grid-card">
+                            <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">पत्तियों पर लालिमा क्यों आ रही है?</span>
+                            <span class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                </svg>
+                            </span>
+                            <h4>रोग और कीट</h4>
+                            <p>फसल के लक्षण पहचानें और सही स्प्रे का सुझाव लें</p>
                         </div>
-                        <div class="grid-card" data-prompt="What are Khadar and Bhangar soil?">
-                            <span class="card-icon">📖</span>
-                            <h4>Soil Classification</h4>
-                            <p>Learn differences between Khadar & Bhangar soil</p>
+                        <div class="grid-card">
+                            <span class="hidden-prompt" style="opacity:0; position:absolute; pointer-events:none; overflow:hidden; width:0; height:0;">खादर और बांगर मिट्टी क्या हैं?</span>
+                            <span class="card-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                </svg>
+                            </span>
+                            <h4>मिट्टी का प्रकार</h4>
+                            <p>खादर और बांगर मिट्टी के बीच का अंतर जानें</p>
                         </div>
                     </div>
                 </div>
@@ -174,13 +234,17 @@
 
                 <!-- Typing Indicator -->
                 <div class="typing-indicator" id="typingIndicator" hidden>
-                    <div class="typing-avatar">🌾</div>
-                    <div class="typing-bubbles">
+                    <div class="typing-avatar">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="sparkle-ai">
+                            <path d="M19.646 9.354c-2.42-2.42-3.146-5.854-3.146-5.854s-.726 3.434-3.146 5.854c-2.42 2.42-5.854 3.146-5.854 3.146s3.434.726 5.854 3.146c2.42 2.42 3.146 5.854 3.146 5.854s.726-3.434 3.146-5.854c2.42-2.42 5.854-3.146 5.854-3.146s-3.434-.726-5.854-3.146z"></path>
+                        </svg>
+                    </div>
+                    <div class="typing-dots">
                         <span></span>
                         <span></span>
                         <span></span>
                     </div>
-                    <span class="typing-text">Retrieving agricultural knowledge...</span>
+                    <span class="typing-text"></span>
                 </div>
 
             </div>
@@ -190,28 +254,35 @@
                 
                 <form id="chatForm" class="chat-input-bar">
                     <!-- Image Upload -->
-                    <label for="imageInput" class="input-action-btn" title="Upload Crop Image for Disease Detection">
-                        📷
+                    <label for="imageInput" class="input-action-btn" title="रोग की पहचान के लिए फसल की फोटो अपलोड करें">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                            <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
                         <input type="file" id="imageInput" accept="image/*" hidden>
                     </label>
 
                     <!-- Voice Mic Button -->
-                    <button type="button" class="input-action-btn mic-btn" id="voiceButton" title="Record Voice Question">
-                        🎤
+                    <button type="button" class="input-action-btn mic-btn" id="voiceButton" title="आवाज़ से सवाल पूछें">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
                     </button>
 
                     <!-- Text Area -->
-                    <textarea id="messageInput" class="text-input-field" placeholder="Type or speak your farming question (e.g. सौंफ की बुवाई कब करें?)..." rows="1"></textarea>
+                    <textarea id="messageInput" class="text-input-field" placeholder="खेती से जुड़ा अपना सवाल लिखें या बोलें (जैसे: सौंफ की बुवाई कब करें?)..." rows="1"></textarea>
 
                     <!-- Send Button -->
-                    <button type="submit" class="send-message-btn" id="sendButton" title="Send Question">
-                        ➔
+                    <button type="submit" class="send-message-btn" id="sendButton" title="सवाल भेजें">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
                     </button>
                 </form>
-
-                <div class="dock-disclaimer">
-                    Farmer Voice AI provides verified guidance from official agricultural packages and datasets.
-                </div>
 
             </div>
 
@@ -222,7 +293,7 @@
     <!-- Voice Recording Overlay Modal -->
     <div class="voice-modal-backdrop" id="voiceModal" hidden>
         <div class="voice-modal-card" style="position: relative;">
-            <button type="button" id="closeVoiceModal" style="position: absolute; top: 12px; right: 14px; font-size: 18px; color: var(--text-muted); cursor: pointer;" title="Close Modal">✕</button>
+            <button type="button" id="closeVoiceModal" style="position: absolute; top: 12px; right: 14px; font-size: 18px; color: var(--text-muted); cursor: pointer; background: transparent; border: none;" title="Close Modal">✕</button>
             <div class="voice-wave-container">
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
@@ -230,14 +301,39 @@
                 <div class="wave-bar"></div>
                 <div class="wave-bar"></div>
             </div>
-            <h3 class="voice-status-title" id="voiceStatusTitle">Listening to your question...</h3>
-            <p class="voice-status-sub" id="voiceStatusSub">Speak clearly in Hindi, English, or your local language</p>
+            <h3 class="voice-status-title" id="voiceStatusTitle">आपका सवाल सुना जा रहा है...</h3>
+            <p class="voice-status-sub" id="voiceStatusSub">कृपया साफ आवाज़ में बोलें</p>
             <div class="voice-timer" id="voiceTimer">00:05</div>
             <button type="button" class="stop-voice-btn" id="stopVoiceBtn">
-                🛑 Stop & Process Audio
+                रोकें और सवाल भेजें
             </button>
         </div>
     </div>
+
+    <!-- Google Translate for Universal Softcoded UI Translation -->
+    <div id="google_translate_element" style="display:none;"></div>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'hi', // Default UI language is Hindi
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+        
+        function changeUILanguage(langCode) {
+            // Wait for Google Translate to load if not already loaded
+            setTimeout(() => {
+                var selectField = document.querySelector(".goog-te-combo");
+                if (selectField) {
+                    let gtLang = langCode;
+                    if (langCode === 'hinglish') gtLang = 'hi';
+                    selectField.value = gtLang;
+                    selectField.dispatchEvent(new Event("change"));
+                }
+            }, 500);
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     <script src="{% static 'chatbot_ui/js/chat.js' %}"></script>
 </body>

@@ -1,3 +1,4 @@
+import sys
 import math
 from typing import Any, Dict, Optional
 
@@ -7,6 +8,19 @@ from apps.knowledge_base.services.normalizer import (
 from apps.knowledge_base.services.crop_resolver import (
     CropResolver,
 )
+
+
+def _safe_print(*args, **kwargs):
+    """Windows-safe print: handles Unicode without crashing on cp1252 terminals."""
+    try:
+        print(*args, **kwargs)
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        try:
+            text = " ".join(str(a) for a in args) + "\n"
+            sys.stdout.buffer.write(text.encode("utf-8", errors="replace"))
+            sys.stdout.buffer.flush()
+        except Exception:
+            pass
 
 
 class RelevanceService:
@@ -68,7 +82,7 @@ class RelevanceService:
 
         except Exception as exc:
 
-            print(
+            _safe_print(
                 "CROP RESOLVER INITIALIZATION ERROR:",
                 str(exc),
             )
@@ -230,8 +244,28 @@ class RelevanceService:
         evidence_count = len(evidence)
 
         # =====================================================
-        # 4. Strong Lexical / Question Match (Universal)
+        # 3.5 Softcoded Universal Relevance Gate
         # =====================================================
+        # If question similarity is low (< 0.60), candidate documents
+        # do not match the user's specific question intent.
+        # EXCEPTION: If keyword match is very strong (>=15.0) AND semantic is
+        # also strong (>=0.82), the crop+topic is clearly a match — allow it.
+        # This handles broad topic queries like 'धान में मुख्य कीट' where the
+        # knowledge base has specific sub-topic entries about that crop topic.
+        keyword_bypass = keyword_raw >= 15.0 and semantic_raw >= self.STRONG_SEMANTIC_SCORE
+
+        if question_raw < 0.60 and not keyword_bypass:
+            return self._response(
+                is_relevant=False,
+                reason="Low question similarity for user query.",
+                evidence=evidence,
+                keyword_raw=keyword_raw,
+                bm25_raw=bm25_raw,
+                fuzzy_raw=fuzzy_raw,
+                semantic_raw=semantic_raw,
+                question_raw=question_raw,
+                crop_validation=crop_guard,
+            )
 
         if (
             question_raw >= 0.80
@@ -444,26 +478,30 @@ class RelevanceService:
                 "document_crop": document_crop,
             }
 
-        if self._crop_matches(
-            query_crop,
-            document_crop,
-        ):
+        query_crops = [query_crop]
+        resolution = best_result.get("query_crop_resolution")
+        if isinstance(resolution, dict) and isinstance(resolution.get("crops"), list):
+            for c in resolution.get("crops"):
+                if c and str(c).strip() not in query_crops:
+                    query_crops.append(str(c).strip())
 
-            return {
-                "is_valid": True,
-                "reason": (
-                    "Question crop matches retrieved "
-                    f"knowledge crop: {document_crop}."
-                ),
-                "query_crop": query_crop,
-                "document_crop": document_crop,
-            }
+        for qc in query_crops:
+            if self._crop_matches(qc, document_crop):
+                return {
+                    "is_valid": True,
+                    "reason": (
+                        "Question crop matches retrieved "
+                        f"knowledge crop: {document_crop}."
+                    ),
+                    "query_crop": qc,
+                    "document_crop": document_crop,
+                }
 
         return {
             "is_valid": False,
             "reason": (
                 "Crop mismatch: question refers to "
-                f"'{query_crop}', but retrieved knowledge "
+                f"'{query_crops}', but retrieved knowledge "
                 f"belongs to '{document_crop}'."
             ),
             "query_crop": query_crop,
