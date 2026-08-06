@@ -48,12 +48,14 @@ ALLOWED_HOSTS = [
     "localhost",
     "192.168.31.120",
     ".onrender.com",
+    ".hf.space",
     "*",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.loca.lt",
     "https://*.lhr.life",
+    "https://*.hf.space",
 ]
 
 # Tell Django it's behind a proxy that terminates SSL (like localtunnel/ngrok)
