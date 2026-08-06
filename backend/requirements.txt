@@ -161,3 +161,4 @@ zstandard==0.25.0
 gunicorn==22.0.0
 dj-database-url==2.1.0
 whitenoise==6.6.0
+easyocr==1.7.2
