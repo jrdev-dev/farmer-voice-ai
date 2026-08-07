@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -8,12 +8,12 @@ __pycache__/
 venv/
 
 # Environment / secrets
-.env
+# .env
 .env.*
 !.env.example
 
 # Django runtime
-db.sqlite3
+# db.sqlite3
 media/
 *.log
 
